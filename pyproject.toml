@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eccb-dgat-tutorial"
+version = "0.1.0"
+description = "Hands-on ECCB tutorial materials for DGAT spatial protein inference"
+requires-python = ">=3.10"
+dependencies = [
+    "anndata>=0.10",
+    "ipykernel>=6",
+    "jupyterlab>=4",
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scanpy>=1.10",
+    "seaborn>=0.13",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

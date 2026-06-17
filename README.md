@@ -1,0 +1,218 @@
+# ECCB Tutorial: Spatial Protein Inference with DGAT
+
+Draft tutorial materials for review by the ECCB Tutorials and Workshops Committee.
+
+This repository contains hands-on material for a 75-minute tutorial on preparing spatial omics data, running DGAT protein inference workflows, and evaluating inferred spatial protein landscapes.
+
+Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
+
+## Schedule
+
+| Time | Session | Topic |
+| --- | --- | --- |
+| 10:45-11:05 | Hands-on Session 1 | Environment setup and spatial data exploration |
+| 11:05-11:35 | Hands-on Session 2 | Running DGAT protein inference workflows |
+| 11:35-12:00 | Hands-on Session 3 | Evaluation and interpretation of spatial protein predictions |
+
+## Repository Contents
+
+```text
+.
+├── notebooks/
+│   ├── 01_environment_and_spatial_exploration.ipynb
+│   ├── 02_dgat_protein_inference_workflow.ipynb
+│   └── 03_evaluation_and_interpretation.ipynb
+├── src/dgat_tutorial/
+│   ├── data.py
+│   ├── evaluation.py
+│   ├── plotting.py
+│   └── dgat.py
+├── data/
+│   ├── raw/          # downloaded or user-provided input data, not committed
+│   └── processed/    # generated intermediate files, not committed
+├── scripts/
+│   ├── download_dgat_assets.sh
+│   └── run_tutorial_demo.py
+├── results/
+│   └── figures/      # generated figures, not committed
+├── environment.yml
+├── requirements.txt
+└── tutorial_checklist.md
+```
+
+## Quick Start for the Tutorial Notebooks
+
+Create the environment with conda:
+
+```bash
+conda env create -f environment.yml
+conda activate eccb-dgat-tutorial
+python -m ipykernel install --user --name eccb-dgat-tutorial --display-name "ECCB DGAT Tutorial"
+jupyter lab
+```
+
+Or use pip in an existing Python environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+jupyter lab
+```
+
+Open the notebooks in order:
+
+1. `notebooks/01_environment_and_spatial_exploration.ipynb`
+2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
+3. `notebooks/03_evaluation_and_interpretation.ipynb`
+
+The notebooks run without external data by generating a small synthetic spatial-CITE-seq-like example. To use real data, place files under `data/raw/` and update the paths in the first notebook.
+
+## Official DGAT Setup
+
+This tutorial repository does not vendor DGAT model code. It wraps the official DGAT implementation with teaching notebooks for data preparation, visualization, and evaluation.
+
+Clone the official DGAT repository into `external/`:
+
+```bash
+mkdir -p external
+git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
+```
+
+Then follow the current installation instructions in the official DGAT README. At the time these tutorial materials were prepared, the official README described a Python 3.11 setup and separate CPU/CUDA requirements files. Treat the official repository as the source of truth because dependency pins may change.
+
+Recommended local layout:
+
+```text
+eccb-dgat-tutorial/
+├── external/
+│   ├── DGAT/
+│   └── DGAT_assets/
+├── data/
+│   ├── raw/
+│   └── processed/
+└── notebooks/
+```
+
+## Download DGAT Checkpoints and Data
+
+The official DGAT README points users to this Google Drive folder for data and model files:
+
+https://drive.google.com/drive/folders/1zmNNTUnF1zquu5zN-kRXu5qad6S8baF7
+
+For pretrained prediction, download these folders from the official assets:
+
+- `DGAT_prediction_ST_data`
+- `DGAT_pretrained_models`
+
+You can download the assets manually from the browser, or use the helper script:
+
+```bash
+python -m pip install gdown
+bash scripts/download_dgat_assets.sh
+```
+
+The script downloads into `external/DGAT_assets/`. For the official DGAT pretrained prediction notebooks/scripts, copy or symlink the required folders beside the official DGAT README in `external/DGAT/`, matching the upstream instructions:
+
+```bash
+ln -s ../DGAT_assets/DGAT_prediction_ST_data external/DGAT/DGAT_prediction_ST_data
+ln -s ../DGAT_assets/DGAT_pretrained_models external/DGAT/DGAT_pretrained_models
+```
+
+If symlinks are inconvenient on your platform, copy those folders instead.
+
+## Tutorial Data
+
+For the live tutorial, prepare one small spatial omics dataset that can be loaded quickly on participant laptops. Put files in `data/raw/`.
+
+Expected files:
+
+- `spots.csv`: spot/cell metadata with `spot_id`, `x`, and `y` columns.
+- `transcripts.csv`: transcript expression matrix with spot IDs as rows and genes as columns.
+- `proteins.csv`: observed protein expression matrix with spot IDs as rows and proteins as columns.
+- `dgat_predictions.csv`: optional precomputed DGAT predictions with spot IDs as rows and proteins as columns.
+
+Large raw datasets, checkpoints, and generated files are intentionally ignored by Git. For the final GitHub repository, either provide a small public demo dataset or document the external download clearly.
+
+## DGAT Prediction Output Contract
+
+Session 2 and Session 3 expect precomputed predictions in this format:
+
+- File: `data/raw/dgat_predictions.csv`
+- Rows: spot/cell IDs matching `spots.csv`, `transcripts.csv`, and `proteins.csv`
+- Columns: protein names
+- Values: inferred protein expression values
+
+Example:
+
+```csv
+spot_id,CD3,CD19,EPCAM,COL1A1,PDL1,KI67
+spot_000,0.41,1.22,0.08,2.31,0.55,0.74
+spot_001,0.39,1.18,0.10,2.27,0.61,0.79
+```
+
+For the live tutorial, run the official DGAT prediction workflow once as a demonstration, then let everyone continue from `data/raw/dgat_predictions.csv`. This keeps the tutorial focused on spatial data preparation, predicted protein landscapes, and biological interpretation instead of installation troubleshooting.
+
+## Script Demo
+
+The repository includes a lightweight script demo that uses synthetic spatial-CITE-seq-like data. This is not the official DGAT model; it is a fallback to verify the tutorial environment and output format.
+
+```bash
+PYTHONPATH=src python scripts/run_tutorial_demo.py
+```
+
+Outputs:
+
+- `data/processed/demo_spots.csv`
+- `data/processed/demo_transcripts.csv`
+- `data/processed/demo_observed_proteins.csv`
+- `data/processed/predicted_proteins.csv`
+- `results/demo_prediction_correlations.csv`
+
+## Jupyter Notebook Demo
+
+The main tutorial is notebook-based. Start Jupyter Lab:
+
+```bash
+jupyter lab
+```
+
+Run the notebooks in order:
+
+1. `notebooks/01_environment_and_spatial_exploration.ipynb`
+   - environment check
+   - spatial transcript/protein data loading
+   - coordinate and neighborhood exploration
+2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
+   - input alignment
+   - official DGAT prediction handoff
+   - `data/raw/dgat_predictions.csv` fallback
+   - predicted protein visualization
+3. `notebooks/03_evaluation_and_interpretation.ipynb`
+   - Pearson/Spearman evaluation
+   - Moran's I spatial coherence
+   - transcript versus observed and inferred protein comparison
+   - biological interpretation prompts
+
+## Learning Objectives
+
+By the end of the tutorial, participants should be able to:
+
+- Load and inspect spatial transcriptomics and spatial-CITE-seq data in Python.
+- Visualize transcript, protein, and neighborhood-level spatial structure.
+- Prepare model inputs for DGAT-style protein inference workflows.
+- Run a pretrained inference workflow or load prepared predictions.
+- Evaluate predictions using correlation metrics and spatial autocorrelation.
+- Interpret successes, failures, and common biological pitfalls.
+
+## Before Uploading to GitHub
+
+See `tutorial_checklist.md` for a review checklist aligned with the 1 July draft-materials deadline.
+
+Minimum items to finalize before committee review:
+
+- Choose the exact official DGAT notebook or command to demonstrate live.
+- Generate a real `data/raw/dgat_predictions.csv` from the tutorial dataset.
+- Confirm the official DGAT checkpoint and data download works on a clean machine.
+- Record expected runtime and whether CPU is sufficient.
+- Render or execute all notebooks once before upload.

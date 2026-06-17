@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+.env
+.DS_Store
+
+# Data and generated outputs
+external/
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+results/*
+!results/.gitkeep
+!results/figures/
+results/figures/*
+!results/figures/.gitkeep
+
+# Large model files
+models/
+*.pt
+*.pth
+*.ckpt
+*.h5ad
+*.h5

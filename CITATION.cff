@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+message: "If you use this tutorial, please cite it using the metadata below."
+title: "ECCB Tutorial: Spatial Protein Inference with DGAT"
+type: software
+authors:
+  - name: "ECCB Tutorial Organizers"
+license: MIT
