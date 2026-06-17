@@ -32,6 +32,7 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 │   └── processed/    # generated intermediate files, not committed
 ├── scripts/
 │   ├── download_dgat_assets.sh
+│   ├── prepare_dgat_data.py
 │   └── run_tutorial_demo.py
 ├── results/
 │   └── figures/      # generated figures, not committed
@@ -66,7 +67,7 @@ Open the notebooks in order:
 2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
 3. `notebooks/03_evaluation_and_interpretation.ipynb`
 
-The notebooks run without external data by generating a small synthetic spatial-CITE-seq-like example. To use real data, place files under `data/raw/` and update the paths in the first notebook.
+The intended tutorial path uses official DGAT data assets. The notebooks still have a small synthetic fallback for environment checks, but the final tutorial should be run from DGAT-derived files in `data/raw/`.
 
 ## Official DGAT Setup
 
@@ -121,9 +122,32 @@ ln -s ../DGAT_assets/DGAT_pretrained_models external/DGAT/DGAT_pretrained_models
 
 If symlinks are inconvenient on your platform, copy those folders instead.
 
+## Prepare DGAT Data for This Tutorial
+
+After downloading the official DGAT assets, convert the DGAT-provided prediction data into the CSV files expected by these tutorial notebooks:
+
+```bash
+python scripts/prepare_dgat_data.py \
+  --asset-dir external/DGAT_assets/DGAT_prediction_ST_data \
+  --output-dir data/raw
+```
+
+This creates:
+
+- `data/raw/spots.csv`
+- `data/raw/transcripts.csv`
+- `data/raw/proteins.csv`
+
+The preparation script supports two common DGAT asset layouts:
+
+- a single `.h5ad` file containing spatial coordinates, transcript features, and protein/ADT values;
+- separate CSV files for spot coordinates, transcript expression, and protein expression.
+
+If the official asset filenames change, pass the downloaded folder with `--asset-dir` and inspect the error message; it reports what file types were searched.
+
 ## Tutorial Data
 
-For the live tutorial, prepare one small spatial omics dataset that can be loaded quickly on participant laptops. Put files in `data/raw/`.
+For the live tutorial, use the DGAT-provided prediction data prepared by `scripts/prepare_dgat_data.py`. Put the converted files in `data/raw/`.
 
 Expected files:
 
@@ -132,7 +156,7 @@ Expected files:
 - `proteins.csv`: observed protein expression matrix with spot IDs as rows and proteins as columns.
 - `dgat_predictions.csv`: optional precomputed DGAT predictions with spot IDs as rows and proteins as columns.
 
-Large raw datasets, checkpoints, and generated files are intentionally ignored by Git. For the final GitHub repository, either provide a small public demo dataset or document the external download clearly.
+Large raw datasets, checkpoints, and generated files are intentionally ignored by Git. The GitHub repository should document the official download rather than committing DGAT assets directly.
 
 ## DGAT Prediction Output Contract
 
@@ -155,7 +179,7 @@ For the live tutorial, run the official DGAT prediction workflow once as a demon
 
 ## Script Demo
 
-The repository includes a lightweight script demo that uses synthetic spatial-CITE-seq-like data. This is not the official DGAT model; it is a fallback to verify the tutorial environment and output format.
+The repository includes a lightweight script demo that uses synthetic spatial-CITE-seq-like data. This is not the official DGAT model and should only be used to verify the tutorial environment and output format when DGAT assets are not yet downloaded.
 
 ```bash
 PYTHONPATH=src python scripts/run_tutorial_demo.py
@@ -214,5 +238,6 @@ Minimum items to finalize before committee review:
 - Choose the exact official DGAT notebook or command to demonstrate live.
 - Generate a real `data/raw/dgat_predictions.csv` from the tutorial dataset.
 - Confirm the official DGAT checkpoint and data download works on a clean machine.
+- Confirm `python scripts/prepare_dgat_data.py` creates `spots.csv`, `transcripts.csv`, and `proteins.csv` from the DGAT-provided data.
 - Record expected runtime and whether CPU is sufficient.
 - Render or execute all notebooks once before upload.
