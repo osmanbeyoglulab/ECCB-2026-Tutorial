@@ -32,6 +32,9 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 │   └── processed/    # generated intermediate files, not committed
 ├── scripts/
 │   ├── download_dgat_assets.sh
+│   ├── session01_spatial_exploration.py
+│   ├── session02_dgat_inference_workflow.py
+│   ├── session03_evaluation_interpretation.py
 │   └── run_tutorial_demo.py
 ├── results/
 │   └── figures/      # generated figures, not committed
@@ -40,15 +43,13 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 └── tutorial_checklist.md
 ```
 
-## Quick Start for the Tutorial Notebooks
+## Quick Start
 
 Create the environment with conda:
 
 ```bash
 conda env create -f environment.yml
 conda activate eccb-dgat-tutorial
-python -m ipykernel install --user --name eccb-dgat-tutorial --display-name "ECCB DGAT Tutorial"
-jupyter lab
 ```
 
 Or use pip in an existing Python environment:
@@ -57,6 +58,46 @@ Or use pip in an existing Python environment:
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+The intended tutorial path uses the official DGAT `.h5ad` data assets directly. The notebooks and command-line scripts still have a small synthetic fallback for environment checks, but the final tutorial should be run from the DGAT files downloaded from Google Drive.
+
+## Command-Line Tutorial Path
+
+If you cannot run Jupyter on a remote server or HPC login node, run the tutorial as Python scripts:
+
+```bash
+bash scripts/download_dgat_assets.sh
+
+PYTHONPATH=src python scripts/session01_spatial_exploration.py
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py
+PYTHONPATH=src python scripts/session03_evaluation_interpretation.py
+```
+
+If you want to test the code before the DGAT assets finish downloading, add `--allow-demo`:
+
+```bash
+PYTHONPATH=src python scripts/session01_spatial_exploration.py --allow-demo
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --allow-demo
+PYTHONPATH=src python scripts/session03_evaluation_interpretation.py --allow-demo
+```
+
+Script outputs are written to:
+
+- `results/session01_dataset_summary.csv`
+- `results/session01_top_transcripts.csv`
+- `results/session01_top_proteins.csv`
+- `data/processed/predicted_proteins.csv`
+- `results/session03_prediction_correlations.csv`
+- `results/session03_morans_i.csv`
+- `results/figures/*.png`
+
+## Jupyter Notebook Path
+
+If Jupyter is available, install the kernel and open Jupyter Lab:
+
+```bash
+python -m ipykernel install --user --name eccb-dgat-tutorial --display-name "ECCB DGAT Tutorial"
 jupyter lab
 ```
 
@@ -65,8 +106,6 @@ Open the notebooks in order:
 1. `notebooks/01_environment_and_spatial_exploration.ipynb`
 2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
 3. `notebooks/03_evaluation_and_interpretation.ipynb`
-
-The intended tutorial path uses the official DGAT `.h5ad` data assets directly. The notebooks still have a small synthetic fallback for environment checks, but the final tutorial should be run from the DGAT files downloaded from Google Drive.
 
 ## Official DGAT Setup
 
