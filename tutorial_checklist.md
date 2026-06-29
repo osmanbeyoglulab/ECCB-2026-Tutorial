@@ -10,7 +10,7 @@ Use this checklist before uploading the draft repository for ECCB committee revi
 - [ ] Any real data files are either small enough for GitHub or replaced by download instructions.
 - [ ] DGAT model weights are either included only if permitted or downloaded by documented instructions.
 - [ ] Official DGAT repository setup has been tested from a clean environment.
-- [ ] Official DGAT prediction data has been converted with `scripts/prepare_dgat_data.py`.
+- [ ] Official DGAT `.h5ad` prediction data loads directly in the tutorial notebooks.
 - [ ] Precomputed fallback predictions are available as `data/raw/dgat_predictions.csv`.
 - [ ] Expected runtime fits the 75-minute tutorial schedule.
 - [ ] Common failure modes are documented in notebook markdown cells.
