@@ -78,7 +78,24 @@ def run_official_dgat_prediction(
     if not rna_h5ad_path.exists():
         raise FileNotFoundError(f"RNA AnnData file not found: {rna_h5ad_path}")
     if not model_save_dir.exists():
-        raise FileNotFoundError(f"DGAT pretrained model directory not found: {model_save_dir}")
+        discovered_model_dir = discover_dgat_model_dir(
+            [
+                model_save_dir,
+                model_save_dir.parent,
+                dgat_repo_dir / "DGAT_pretrained_models",
+                dgat_repo_dir,
+                Path("external") / "DGAT_assets",
+            ]
+        )
+        if discovered_model_dir is None:
+            raise FileNotFoundError(
+                f"DGAT pretrained model directory not found: {model_save_dir}. "
+                "Searched common asset locations for encoder_mRNA.pth and decoder_protein.pth. "
+                "Run `find external -name encoder_mRNA.pth -o -name decoder_protein.pth` to locate the downloaded model, "
+                "then pass its parent directory with `--model-save-dir`."
+            )
+        print(f"Using discovered DGAT pretrained model directory: {discovered_model_dir}")
+        model_save_dir = discovered_model_dir
 
     common_gene_path, common_protein_path = resolve_dgat_resource_files(
         dgat_repo_dir=dgat_repo_dir,
@@ -184,6 +201,28 @@ def infer_feature_counts_from_model_dir(model_save_dir: str | Path) -> tuple[int
         if match:
             return int(match.group("genes")), int(match.group("proteins"))
     return None, None
+
+
+def discover_dgat_model_dir(search_roots: list[Path]) -> Path | None:
+    """Find the root directory that should be passed to DGAT protein_predict."""
+
+    candidate_checkpoint_dirs = []
+    for root in search_roots:
+        if not root.exists():
+            continue
+        for encoder_path in root.rglob("encoder_mRNA.pth"):
+            checkpoint_dir = encoder_path.parent
+            if (checkpoint_dir / "decoder_protein.pth").exists():
+                candidate_checkpoint_dirs.append(checkpoint_dir)
+
+    if not candidate_checkpoint_dirs:
+        return None
+
+    candidate_checkpoint_dirs = sorted(set(candidate_checkpoint_dirs), key=lambda path: str(path))
+    checkpoint_dir = candidate_checkpoint_dirs[0]
+    if re.fullmatch(r"\d+_gene_\d+_protein", checkpoint_dir.name):
+        return checkpoint_dir.parent
+    return checkpoint_dir
 
 
 def find_common_feature_file(search_dirs: list[Path], prefix: str, count: int | None) -> Path | None:

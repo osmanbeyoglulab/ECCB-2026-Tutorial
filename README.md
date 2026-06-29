@@ -114,6 +114,20 @@ PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
   --output data/processed/predicted_proteins.csv
 ```
 
+If the downloaded Google Drive folder uses a different model-folder name, the wrapper will try to auto-discover the pretrained model by searching for `encoder_mRNA.pth` and `decoder_protein.pth`. To inspect the downloaded layout yourself:
+
+```bash
+find external -name encoder_mRNA.pth -o -name decoder_protein.pth
+```
+
+If needed, pass the directory that contains the `*_gene_*_protein/` checkpoint subdirectory:
+
+```bash
+PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
+  --model-save-dir path/to/DGAT_pretrained_models \
+  --output data/processed/predicted_proteins.csv
+```
+
 Or run it through Session 2:
 
 ```bash
