@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
-from dgat_tutorial.dgat import load_prediction_table, run_demo_dgat_inference
+from dgat_tutorial.dgat import load_prediction_table, run_demo_dgat_inference, run_official_dgat_prediction
 from dgat_tutorial.plotting import plot_spatial_feature
 
 
@@ -16,6 +16,12 @@ def main() -> None:
     parser.add_argument("--processed-dir", type=Path, default=Path("data/processed"))
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--predictions", type=Path, default=None, help="Optional precomputed DGAT prediction CSV/TSV.")
+    parser.add_argument("--run-official-dgat", action="store_true", help="Run official DGAT protein_predict if no prediction table is found.")
+    parser.add_argument("--dgat-repo", type=Path, default=Path("external/DGAT"))
+    parser.add_argument("--model-save-dir", type=Path, default=Path("external/DGAT_assets/DGAT_pretrained_models"))
+    parser.add_argument("--pyg-data-dir", type=Path, default=Path("data/processed/dgat_pyg"))
+    parser.add_argument("--common-gene", type=Path, default=None)
+    parser.add_argument("--common-protein", type=Path, default=None)
     parser.add_argument("--allow-demo", action="store_true", help="Use synthetic fallback data if no DGAT .h5ad is found.")
     args = parser.parse_args()
 
@@ -43,9 +49,22 @@ def main() -> None:
     if prediction_path.exists():
         predicted_proteins = load_prediction_table(str(prediction_path))
         print(f"Loaded precomputed DGAT predictions: {prediction_path}")
+    elif args.run_official_dgat:
+        rna_h5ad = dgat_h5ad_pair[0] if dgat_h5ad_pair else dgat_h5ad
+        if rna_h5ad is None:
+            raise FileNotFoundError("Could not find RNA .h5ad for official DGAT prediction.")
+        predicted_proteins = run_official_dgat_prediction(
+            rna_h5ad_path=rna_h5ad,
+            dgat_repo_dir=args.dgat_repo,
+            model_save_dir=args.model_save_dir,
+            pyg_data_dir=args.pyg_data_dir,
+            common_gene_path=args.common_gene,
+            common_protein_path=args.common_protein,
+        )
+        print("Generated predictions with official DGAT protein_predict.")
     else:
         predicted_proteins = run_demo_dgat_inference(transcripts, proteins)
-        print("Generated demo DGAT-like predictions because no prediction table was found.")
+        print("Generated demo DGAT-like predictions because no prediction table was found. Use --run-official-dgat for pretrained DGAT.")
 
     predicted_proteins.to_csv(args.processed_dir / "predicted_proteins.csv")
 

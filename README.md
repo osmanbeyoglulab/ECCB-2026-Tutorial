@@ -35,6 +35,7 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 │   ├── session01_spatial_exploration.py
 │   ├── session02_dgat_inference_workflow.py
 │   ├── session03_evaluation_interpretation.py
+│   ├── run_official_dgat_prediction.py
 │   └── run_tutorial_demo.py
 ├── results/
 │   └── figures/      # generated figures, not committed
@@ -91,6 +92,41 @@ Script outputs are written to:
 - `results/session03_prediction_correlations.csv`
 - `results/session03_morans_i.csv`
 - `results/figures/*.png`
+
+## Official DGAT Prediction From the Command Line
+
+Session 2 can run the official pretrained DGAT prediction workflow if the official DGAT repository and pretrained model assets are available.
+
+First clone DGAT and download assets:
+
+```bash
+mkdir -p external
+git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
+bash scripts/download_dgat_assets.sh
+```
+
+Then run official prediction:
+
+```bash
+PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
+  --dgat-repo external/DGAT \
+  --model-save-dir external/DGAT_assets/DGAT_pretrained_models \
+  --output data/processed/predicted_proteins.csv
+```
+
+Or run it through Session 2:
+
+```bash
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --run-official-dgat
+```
+
+The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It automatically uses the downloaded RNA `.h5ad` file, resolves compatible `common_gene_*.txt` and `common_protein_*.txt` files from the DGAT repository/model assets, and writes:
+
+```text
+data/processed/predicted_proteins.csv
+```
+
+If the official DGAT dependencies are not installed in the active environment, use the official DGAT `requirements_CPU.txt` or `requirements_CUDA.txt` as the source of truth.
 
 ## Jupyter Notebook Path
 
