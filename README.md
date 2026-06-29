@@ -168,7 +168,47 @@ mkdir -p external
 git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
 ```
 
-Then follow the current installation instructions in the official DGAT README. At the time these tutorial materials were prepared, the official README described a Python 3.11 setup and separate CPU/CUDA requirements files. Treat the official repository as the source of truth because dependency pins may change.
+Then install the full official DGAT dependency stack in the active tutorial environment. The official DGAT code imports PyTorch Geometric (`torch_geometric`), so the lightweight tutorial dependencies are not sufficient for `--run-official-dgat`. Install PyTorch first, because the correct PyTorch wheel depends on your CUDA runtime.
+
+First check whether the machine has CUDA and which CUDA toolkit is visible:
+
+```bash
+nvcc -V
+nvidia-smi
+```
+
+CUDA availability differs across clusters and partitions. Install a PyTorch build that matches the CUDA version you will actually use. Use the official PyTorch selector as the source of truth:
+
+https://pytorch.org/get-started/locally/
+
+CPU-only example:
+
+```bash
+pip install torch torchvision torchaudio
+pip install -r external/DGAT/requirements_CPU.txt
+```
+
+CUDA example, replace the PyTorch command with the one matching your CUDA version from the PyTorch selector:
+
+```bash
+# Example only; choose the correct CUDA build for your cluster.
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install -r external/DGAT/requirements_CUDA.txt
+```
+
+Verify the core imports before running official DGAT prediction:
+
+```bash
+python - <<'PY'
+import torch
+import torch_geometric
+print("torch:", torch.__version__)
+print("torch_geometric:", torch_geometric.__version__)
+print("cuda available:", torch.cuda.is_available())
+PY
+```
+
+Treat the official DGAT repository as the source of truth because dependency pins may change.
 
 Recommended local layout:
 
