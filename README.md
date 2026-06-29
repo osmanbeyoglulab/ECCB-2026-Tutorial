@@ -183,22 +183,23 @@ eccb-dgat-tutorial/
 └── notebooks/
 ```
 
-## Download DGAT Checkpoints and Data
+## Download DGAT Data and Model Weights
 
-The original DGAT repository provides tutorial data and checkpoint assets through this Google Drive folder:
+The DGAT tutorial data and pretrained model weights are provided in separate Google Drive folders:
 
-https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C
+- Data: https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C
+- Model weights: https://drive.google.com/drive/folders/1uRYhgVgUpkhpE9VTtUB5YmU_hRsf69oD
 
-Download the full folder before the tutorial. The key assets are expected to include:
+Download both folders before the tutorial. The key assets are expected to include:
 
 - `DGAT_prediction_ST_data`
 - pretrained model weights containing files such as `encoder_mRNA.pth` and `decoder_protein.pth`
 
 Option A: download manually from the browser.
 
-1. Open the Google Drive folder above.
-2. Download the complete folder contents.
-3. Place the downloaded contents under `external/DGAT_assets/`.
+1. Open both Google Drive folders above.
+2. Download the complete data folder contents into `external/DGAT_assets/data/`.
+3. Download the complete model-weight folder contents into `external/DGAT_assets/model_weights/`.
 
 Option B: download with `gdown`.
 
@@ -207,7 +208,7 @@ python -m pip install gdown
 bash scripts/download_dgat_assets.sh
 ```
 
-The helper script downloads the Drive folder into `external/DGAT_assets/` and then checks whether `.h5ad` data files and DGAT model weight files were actually downloaded. You can also inspect manually:
+The helper script downloads the data folder into `external/DGAT_assets/data/`, the model-weight folder into `external/DGAT_assets/model_weights/`, and then checks whether `.h5ad` data files and DGAT model weight files were actually downloaded. You can also inspect manually:
 
 ```bash
 ls external/DGAT_assets
@@ -215,7 +216,7 @@ find external/DGAT_assets -name "*.h5ad"
 find external/DGAT_assets \( -name "encoder_mRNA.pth" -o -name "decoder_protein.pth" \)
 ```
 
-If no `.pth` files are found, the Google Drive download did not include model weights. This can happen when the Drive folder contains shortcuts, restricted files, quota-limited files, or a separate pretrained-model folder that `gdown --folder` did not traverse. In that case, open the Drive folder manually and download the pretrained model folder into `external/DGAT_assets/`.
+If no `.pth` files are found, the model-weight Drive folder did not download correctly. This can happen when Drive contains shortcuts, restricted files, or quota-limited files that `gdown --folder` cannot traverse. In that case, open the model-weight folder manually and download it into `external/DGAT_assets/model_weights/`.
 
 The tutorial scripts do not require copying or symlinking asset folders into `external/DGAT/`; they search under `external/DGAT_assets/` automatically.
 

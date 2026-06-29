@@ -3,23 +3,38 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ASSET_DIR="${ROOT_DIR}/external/DGAT_assets"
-DRIVE_URL="https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C"
+DATA_DIR="${ASSET_DIR}/data"
+MODEL_DIR="${ASSET_DIR}/model_weights"
+DATA_DRIVE_URL="https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C"
+MODEL_DRIVE_URL="https://drive.google.com/drive/folders/1uRYhgVgUpkhpE9VTtUB5YmU_hRsf69oD"
 
-mkdir -p "${ASSET_DIR}"
+mkdir -p "${DATA_DIR}" "${MODEL_DIR}"
 
 if ! command -v gdown >/dev/null 2>&1; then
   echo "gdown is required. Install it with: python -m pip install gdown"
   exit 1
 fi
 
-echo "Downloading official DGAT data/model assets from:"
-echo "${DRIVE_URL}"
-if gdown --help 2>&1 | grep -q -- "--remaining-ok"; then
-  gdown --folder "${DRIVE_URL}" -O "${ASSET_DIR}" --remaining-ok
-else
-  echo "Installed gdown does not support --remaining-ok; using compatible download mode."
-  gdown --folder "${DRIVE_URL}" -O "${ASSET_DIR}"
-fi
+download_folder() {
+  local label="$1"
+  local url="$2"
+  local output_dir="$3"
+
+  echo
+  echo "Downloading ${label} from:"
+  echo "${url}"
+  echo "Output directory: ${output_dir}"
+
+  if gdown --help 2>&1 | grep -q -- "--remaining-ok"; then
+    gdown --folder "${url}" -O "${output_dir}" --remaining-ok
+  else
+    echo "Installed gdown does not support --remaining-ok; using compatible download mode."
+    gdown --folder "${url}" -O "${output_dir}"
+  fi
+}
+
+download_folder "DGAT data assets" "${DATA_DRIVE_URL}" "${DATA_DIR}"
+download_folder "DGAT pretrained model weights" "${MODEL_DRIVE_URL}" "${MODEL_DIR}"
 
 echo
 echo "Downloaded assets to: ${ASSET_DIR}"
@@ -45,8 +60,8 @@ else
   echo "  - encoder_mRNA.pth"
   echo "  - decoder_protein.pth"
   echo
-  echo "This means the Google Drive folder downloaded by gdown did not include the pretrained model weights,"
-  echo "or gdown skipped them because of permissions/quota/shortcut handling."
-  echo "Open the Drive folder manually and check whether a pretrained model folder is present:"
-  echo "  ${DRIVE_URL}"
+  echo "This means gdown did not download the model weights folder correctly,"
+  echo "or the folder requires browser/manual download because of permissions/quota/shortcut handling."
+  echo "Open the model-weights Drive folder manually and download it into ${MODEL_DIR}:"
+  echo "  ${MODEL_DRIVE_URL}"
 fi
