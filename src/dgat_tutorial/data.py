@@ -82,6 +82,10 @@ def load_tutorial_data(data_dir: str | Path, allow_demo: bool = True) -> Spatial
     """
 
     data_dir = Path(data_dir)
+    h5ad_pair = find_dgat_h5ad_pair(data_dir)
+    if h5ad_pair is not None:
+        return load_paired_h5ad_dataset(*h5ad_pair)
+
     h5ad_path = find_dgat_h5ad(data_dir)
     if h5ad_path is not None:
         return load_h5ad_dataset(h5ad_path)
@@ -100,7 +104,31 @@ def load_tutorial_data(data_dir: str | Path, allow_demo: bool = True) -> Spatial
 
 
 def find_dgat_h5ad(data_dir: str | Path) -> Path | None:
-    """Find the first DGAT H5AD file in the expected tutorial locations."""
+    """Find a DGAT H5AD file in the expected tutorial locations."""
+
+    matches = _find_h5ad_files(data_dir)
+    if not matches:
+        return None
+    return _prefer_transcript_h5ad(matches)
+
+
+def find_dgat_h5ad_pair(data_dir: str | Path) -> tuple[Path, Path] | None:
+    """Find paired RNA and ADT/protein DGAT H5AD files."""
+
+    matches = _find_h5ad_files(data_dir)
+    if len(matches) < 2:
+        return None
+
+    transcript_files = [path for path in matches if _looks_like_transcript_h5ad(path)]
+    protein_files = [path for path in matches if _looks_like_protein_h5ad(path)]
+    if not transcript_files or not protein_files:
+        return None
+
+    return transcript_files[0], protein_files[0]
+
+
+def _find_h5ad_files(data_dir: str | Path) -> list[Path]:
+    """Collect DGAT H5AD files from expected tutorial locations."""
 
     data_dir = Path(data_dir)
     repo_root = data_dir.parents[1] if data_dir.name == "raw" and data_dir.parent.name == "data" else Path.cwd()
@@ -110,25 +138,48 @@ def find_dgat_h5ad(data_dir: str | Path) -> Path | None:
         repo_root / "external" / "DGAT_assets",
         repo_root / "external" / "DGAT" / "DGAT_prediction_ST_data",
     ]
+    matches = []
     for candidate_dir in candidate_dirs:
         if candidate_dir.exists():
-            matches = sorted(candidate_dir.rglob("*.h5ad"))
-            if matches:
-                return matches[0]
-    return None
+            matches.extend(sorted(candidate_dir.rglob("*.h5ad")))
+    return sorted(set(matches), key=lambda path: str(path))
 
 
-def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
-    """Load a DGAT AnnData file without converting it to CSV first."""
+def _looks_like_transcript_h5ad(path: Path) -> bool:
+    name = path.name.lower()
+    return any(token in name for token in ["rna", "gene", "transcript", "mrna", "gex"])
 
+
+def _looks_like_protein_h5ad(path: Path) -> bool:
+    name = path.name.lower()
+    return any(token in name for token in ["adt", "protein", "cite", "antibody"])
+
+
+def _prefer_transcript_h5ad(paths: list[Path]) -> Path:
+    transcript_files = [path for path in paths if _looks_like_transcript_h5ad(path)]
+    if transcript_files:
+        return transcript_files[0]
+    non_protein_files = [path for path in paths if not _looks_like_protein_h5ad(path)]
+    if non_protein_files:
+        return non_protein_files[0]
+    return paths[0]
+
+
+def _read_anndata(path: Path):
     try:
         import anndata as ad
     except ImportError as exc:
         raise ImportError("Reading DGAT .h5ad files requires `anndata`. Install the tutorial environment first.") from exc
 
-    path = Path(path)
-    adata = ad.read_h5ad(path)
+    return ad.read_h5ad(path)
 
+
+def _matrix_to_dataframe(adata) -> pd.DataFrame:
+    matrix = adata.X.toarray() if hasattr(adata.X, "toarray") else np.asarray(adata.X)
+    return pd.DataFrame(matrix, index=adata.obs_names, columns=adata.var_names)
+
+
+def _spots_from_anndata(adata, path: Path) -> pd.DataFrame:
     spots = adata.obs.copy()
     if "spatial" in adata.obsm:
         spatial = np.asarray(adata.obsm["spatial"])
@@ -140,9 +191,42 @@ def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
         if x_col is None or y_col is None:
             raise ValueError(f"{path} does not contain `obsm['spatial']` or recognizable coordinate columns.")
         spots = spots.rename(columns={x_col: "x", y_col: "y"})
+    return spots
 
-    matrix = adata.X.toarray() if hasattr(adata.X, "toarray") else np.asarray(adata.X)
-    transcripts = pd.DataFrame(matrix, index=adata.obs_names, columns=adata.var_names)
+
+def load_paired_h5ad_dataset(transcript_path: str | Path, protein_path: str | Path) -> SpatialOmicsData:
+    """Load DGAT assets split across RNA and ADT/protein AnnData files."""
+
+    transcript_path = Path(transcript_path)
+    protein_path = Path(protein_path)
+    transcript_adata = _read_anndata(transcript_path)
+    protein_adata = _read_anndata(protein_path)
+
+    spots = _spots_from_anndata(transcript_adata, transcript_path)
+    transcripts = _matrix_to_dataframe(transcript_adata)
+    proteins = _matrix_to_dataframe(protein_adata)
+
+    common = spots.index.intersection(transcripts.index).intersection(proteins.index)
+    if common.empty:
+        raise ValueError(
+            f"No shared observations between {transcript_path} and {protein_path}. "
+            "Check that RNA and ADT files are from the same DGAT dataset."
+        )
+
+    return SpatialOmicsData(
+        spots=spots.loc[common],
+        transcripts=transcripts.loc[common],
+        proteins=proteins.loc[common],
+    )
+
+
+def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
+    """Load a DGAT AnnData file without converting it to CSV first."""
+
+    path = Path(path)
+    adata = _read_anndata(path)
+    spots = _spots_from_anndata(adata, path)
+    transcripts = _matrix_to_dataframe(adata)
 
     protein_key = next(
         (
@@ -160,6 +244,12 @@ def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
         None,
     )
     if protein_key is None:
+        if _looks_like_protein_h5ad(path):
+            raise ValueError(
+                f"{path} looks like an ADT/protein AnnData file. DGAT assets usually pair it with an RNA "
+                "AnnData file such as `Breast_RNA.h5ad`. Make sure both files are downloaded in the same "
+                "asset directory."
+            )
         raise ValueError(
             f"{path} does not contain observed protein values in `.obsm`. "
             "Expected one of: protein, proteins, protein_expression, protein_expression_raw, ADT, CITE."

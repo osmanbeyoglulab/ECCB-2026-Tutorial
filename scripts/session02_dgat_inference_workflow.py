@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from dgat_tutorial.data import find_dgat_h5ad, load_tutorial_data
+from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
 from dgat_tutorial.dgat import load_prediction_table, run_demo_dgat_inference
 from dgat_tutorial.plotting import plot_spatial_feature
 
@@ -23,9 +23,13 @@ def main() -> None:
     fig_dir = args.output_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
 
+    dgat_h5ad_pair = find_dgat_h5ad_pair(args.data_dir)
     dgat_h5ad = find_dgat_h5ad(args.data_dir)
     dataset = load_tutorial_data(args.data_dir, allow_demo=args.allow_demo)
-    print(f"Loaded DGAT AnnData file: {dgat_h5ad}" if dgat_h5ad else "Loaded synthetic fallback data")
+    if dgat_h5ad_pair:
+        print(f"Loaded DGAT AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
+    else:
+        print(f"Loaded DGAT AnnData file: {dgat_h5ad}" if dgat_h5ad else "Loaded synthetic fallback data")
 
     spots = dataset.spots
     transcripts = dataset.transcripts

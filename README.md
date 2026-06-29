@@ -181,11 +181,20 @@ For the live tutorial, use the DGAT-provided `.h5ad` prediction data directly, m
 - `external/DGAT/DGAT_prediction_ST_data/**/*.h5ad`
 - `data/raw/**/*.h5ad`
 
-The expected AnnData structure is:
+The DGAT Google Drive assets may provide paired AnnData files, for example an RNA file such as `Breast_RNA.h5ad` and an ADT/protein file such as `Breast_ADT.h5ad`. The scripts automatically pair RNA-like files with ADT/protein-like files when both are present in the downloaded asset directory.
+
+For a single combined AnnData file, the expected structure is:
 
 - transcript expression in `adata.X`;
 - spatial coordinates in `adata.obsm["spatial"]` or coordinate columns in `adata.obs`;
 - observed protein/ADT values in one of `adata.obsm["protein"]`, `adata.obsm["proteins"]`, `adata.obsm["protein_expression"]`, `adata.obsm["protein_expression_raw"]`, `adata.obsm["ADT"]`, or `adata.obsm["CITE"]`.
+
+For paired AnnData files, the expected structure is:
+
+- RNA/transcript expression in the RNA file's `adata.X`;
+- ADT/protein expression in the ADT file's `adata.X`;
+- shared observation IDs between the RNA and ADT files;
+- spatial coordinates in the RNA file's `adata.obsm["spatial"]` or coordinate columns in `adata.obs`.
 
 Optional precomputed DGAT predictions can still be supplied as `data/raw/dgat_predictions.csv` or generated into `data/processed/predicted_proteins.csv` for the evaluation notebook.
 
