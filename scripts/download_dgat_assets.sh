@@ -15,7 +15,12 @@ fi
 
 echo "Downloading official DGAT data/model assets from:"
 echo "${DRIVE_URL}"
-gdown --folder "${DRIVE_URL}" -O "${ASSET_DIR}" --remaining-ok
+if gdown --help 2>&1 | grep -q -- "--remaining-ok"; then
+  gdown --folder "${DRIVE_URL}" -O "${ASSET_DIR}" --remaining-ok
+else
+  echo "Installed gdown does not support --remaining-ok; using compatible download mode."
+  gdown --folder "${DRIVE_URL}" -O "${ASSET_DIR}"
+fi
 
 echo
 echo "Downloaded assets to: ${ASSET_DIR}"
