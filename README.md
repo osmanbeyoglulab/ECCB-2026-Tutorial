@@ -97,23 +97,35 @@ eccb-dgat-tutorial/
 
 ## Download DGAT Checkpoints and Data
 
-The official DGAT README points users to this Google Drive folder for data and model files:
+The original DGAT repository provides tutorial data and checkpoint assets through this Google Drive folder:
 
-https://drive.google.com/drive/folders/1zmNNTUnF1zquu5zN-kRXu5qad6S8baF7
+https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C
 
-For pretrained prediction, download these folders from the official assets:
+Download the full folder before the tutorial. For pretrained prediction, the key assets are expected to include:
 
 - `DGAT_prediction_ST_data`
 - `DGAT_pretrained_models`
 
-You can download the assets manually from the browser, or use the helper script:
+Option A: download manually from the browser.
+
+1. Open the Google Drive folder above.
+2. Download the complete folder contents.
+3. Place the downloaded contents under `external/DGAT_assets/`.
+
+Option B: download with `gdown`.
 
 ```bash
 python -m pip install gdown
 bash scripts/download_dgat_assets.sh
 ```
 
-The script downloads into `external/DGAT_assets/`. For the official DGAT pretrained prediction notebooks/scripts, copy or symlink the required folders beside the official DGAT README in `external/DGAT/`, matching the upstream instructions:
+The helper script downloads the Drive folder into `external/DGAT_assets/`. After download, check that the expected asset folders exist:
+
+```bash
+ls external/DGAT_assets
+```
+
+For the official DGAT pretrained prediction notebooks/scripts, copy or symlink the required folders beside the official DGAT README in `external/DGAT/`, matching the upstream instructions:
 
 ```bash
 ln -s ../DGAT_assets/DGAT_prediction_ST_data external/DGAT/DGAT_prediction_ST_data

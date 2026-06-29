@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ASSET_DIR="${ROOT_DIR}/external/DGAT_assets"
 DGAT_DIR="${ROOT_DIR}/external/DGAT"
-DRIVE_URL="https://drive.google.com/drive/folders/1zmNNTUnF1zquu5zN-kRXu5qad6S8baF7"
+DRIVE_URL="https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C"
 
 mkdir -p "${ASSET_DIR}" "${DGAT_DIR}"
 
@@ -13,7 +13,8 @@ if ! command -v gdown >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Downloading official DGAT data/model assets..."
+echo "Downloading official DGAT data/model assets from:"
+echo "${DRIVE_URL}"
 gdown --folder "${DRIVE_URL}" -O "${ASSET_DIR}" --remaining-ok
 
 echo
