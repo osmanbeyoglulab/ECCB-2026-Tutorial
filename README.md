@@ -189,10 +189,10 @@ The original DGAT repository provides tutorial data and checkpoint assets throug
 
 https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C
 
-Download the full folder before the tutorial. For pretrained prediction, the key assets are expected to include:
+Download the full folder before the tutorial. The key assets are expected to include:
 
 - `DGAT_prediction_ST_data`
-- `DGAT_pretrained_models`
+- pretrained model weights containing files such as `encoder_mRNA.pth` and `decoder_protein.pth`
 
 Option A: download manually from the browser.
 
@@ -207,20 +207,17 @@ python -m pip install gdown
 bash scripts/download_dgat_assets.sh
 ```
 
-The helper script downloads the Drive folder into `external/DGAT_assets/`. After download, check that the expected asset folders exist:
+The helper script downloads the Drive folder into `external/DGAT_assets/` and then checks whether `.h5ad` data files and DGAT model weight files were actually downloaded. You can also inspect manually:
 
 ```bash
 ls external/DGAT_assets
+find external/DGAT_assets -name "*.h5ad"
+find external/DGAT_assets \( -name "encoder_mRNA.pth" -o -name "decoder_protein.pth" \)
 ```
 
-For the official DGAT pretrained prediction notebooks/scripts, copy or symlink the required folders beside the official DGAT README in `external/DGAT/`, matching the upstream instructions:
+If no `.pth` files are found, the Google Drive download did not include model weights. This can happen when the Drive folder contains shortcuts, restricted files, quota-limited files, or a separate pretrained-model folder that `gdown --folder` did not traverse. In that case, open the Drive folder manually and download the pretrained model folder into `external/DGAT_assets/`.
 
-```bash
-ln -s ../DGAT_assets/DGAT_prediction_ST_data external/DGAT/DGAT_prediction_ST_data
-ln -s ../DGAT_assets/DGAT_pretrained_models external/DGAT/DGAT_pretrained_models
-```
-
-If symlinks are inconvenient on your platform, copy those folders instead.
+The tutorial scripts do not require copying or symlinking asset folders into `external/DGAT/`; they search under `external/DGAT_assets/` automatically.
 
 ## Tutorial Data
 
