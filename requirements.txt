@@ -1,9 +1,13 @@
 -e .
 anndata>=0.10
+gdown>=5
 ipykernel>=6
 jupyterlab>=4
 matplotlib>=3.8
 numpy>=1.26
 pandas>=2.1
 scanpy>=1.10
+scikit-learn>=1.4
+scipy>=1.11
 seaborn>=0.13
+squidpy>=1.4

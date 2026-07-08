@@ -14,140 +14,16 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 | 11:05-11:35 | Hands-on Session 2 | Running DGAT protein inference workflows |
 | 11:35-12:00 | Hands-on Session 3 | Evaluation and interpretation of spatial protein predictions |
 
-## Repository Contents
-
-```text
-.
-├── notebooks/
-│   ├── 01_environment_and_spatial_exploration.ipynb
-│   ├── 02_dgat_protein_inference_workflow.ipynb
-│   └── 03_evaluation_and_interpretation.ipynb
-├── src/dgat_tutorial/
-│   ├── data.py
-│   ├── evaluation.py
-│   ├── plotting.py
-│   └── dgat.py
-├── data/
-│   ├── raw/          # downloaded or user-provided input data, not committed
-│   └── processed/    # generated intermediate files, not committed
-├── scripts/
-│   ├── download_dgat_assets.sh
-│   ├── session01_spatial_exploration.py
-│   ├── session02_dgat_inference_workflow.py
-│   ├── session03_evaluation_interpretation.py
-│   ├── run_official_dgat_prediction.py
-│   └── run_tutorial_demo.py
-├── results/
-│   └── figures/      # generated figures, not committed
-├── environment.yml
-├── requirements.txt
-└── tutorial_checklist.md
-```
-
 ## Quick Start
 
-Create the environment with conda:
+The default tutorial path uses one conda environment and the official DGAT `.h5ad` data assets. Official DGAT model execution is optional and described later.
 
 ```bash
+git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
+cd ECCB-2026-Tutorial
 conda env create -f environment.yml
 conda activate eccb-dgat-tutorial
-```
-
-Or use pip in an existing Python environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-The intended tutorial path uses the official DGAT `.h5ad` data assets directly. The notebooks and command-line scripts still have a small synthetic fallback for environment checks, but the final tutorial should be run from the DGAT files downloaded from Google Drive.
-
-## Command-Line Tutorial Path
-
-If you cannot run Jupyter on a remote server or HPC login node, run the tutorial as Python scripts:
-
-```bash
 bash scripts/download_dgat_assets.sh
-
-PYTHONPATH=src python scripts/session01_spatial_exploration.py
-PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py
-PYTHONPATH=src python scripts/session03_evaluation_interpretation.py
-```
-
-If you want to test the code before the DGAT assets finish downloading, add `--allow-demo`:
-
-```bash
-PYTHONPATH=src python scripts/session01_spatial_exploration.py --allow-demo
-PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --allow-demo
-PYTHONPATH=src python scripts/session03_evaluation_interpretation.py --allow-demo
-```
-
-Script outputs are written to:
-
-- `results/session01_dataset_summary.csv`
-- `results/session01_top_transcripts.csv`
-- `results/session01_top_proteins.csv`
-- `data/processed/predicted_proteins.csv`
-- `results/session03_prediction_correlations.csv`
-- `results/session03_morans_i.csv`
-- `results/figures/*.png`
-
-## Official DGAT Prediction From the Command Line
-
-Session 2 can run the official pretrained DGAT prediction workflow if the official DGAT repository and pretrained model assets are available.
-
-First clone DGAT and download assets:
-
-```bash
-mkdir -p external
-git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
-bash scripts/download_dgat_assets.sh
-```
-
-Then run official prediction:
-
-```bash
-PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
-  --dgat-repo external/DGAT \
-  --model-save-dir external/DGAT_assets/DGAT_pretrained_models \
-  --output data/processed/predicted_proteins.csv
-```
-
-If the downloaded Google Drive folder uses a different model-folder name, the wrapper will try to auto-discover the pretrained model by searching for `encoder_mRNA.pth` and `decoder_protein.pth`. To inspect the downloaded layout yourself:
-
-```bash
-find external -name encoder_mRNA.pth -o -name decoder_protein.pth
-```
-
-If needed, pass the directory that contains the `*_gene_*_protein/` checkpoint subdirectory:
-
-```bash
-PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
-  --model-save-dir path/to/DGAT_pretrained_models \
-  --output data/processed/predicted_proteins.csv
-```
-
-Or run it through Session 2:
-
-```bash
-PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --run-official-dgat
-```
-
-The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It automatically uses the downloaded RNA `.h5ad` file, resolves compatible `common_gene_*.txt` and `common_protein_*.txt` files from the DGAT repository/model assets, and writes:
-
-```text
-data/processed/predicted_proteins.csv
-```
-
-If the official DGAT dependencies are not installed in the active environment, use the official DGAT `requirements_CPU.txt` or `requirements_CUDA.txt` as the source of truth.
-
-## Jupyter Notebook Path
-
-If Jupyter is available, install the kernel and open Jupyter Lab:
-
-```bash
-python -m ipykernel install --user --name eccb-dgat-tutorial --display-name "ECCB DGAT Tutorial"
 jupyter lab
 ```
 
@@ -157,70 +33,35 @@ Open the notebooks in order:
 2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
 3. `notebooks/03_evaluation_and_interpretation.ipynb`
 
-## Official DGAT Setup
+The default environment includes the packages needed for the tutorial notebooks, including JupyterLab, Scanpy, AnnData, Squidpy, scikit-learn, matplotlib, pandas, NumPy, SciPy, seaborn, and gdown. It intentionally does not directly install PyTorch Geometric or the full official DGAT dependency stack.
 
-This tutorial repository does not vendor DGAT model code. It wraps the official DGAT implementation with teaching notebooks for data preparation, visualization, and evaluation.
-
-Clone the official DGAT repository into `external/`:
-
-```bash
-mkdir -p external
-git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
-```
-
-Then install the full official DGAT dependency stack in the active tutorial environment. The official DGAT code imports PyTorch Geometric (`torch_geometric`), so the lightweight tutorial dependencies are not sufficient for `--run-official-dgat`. Install PyTorch first, because the correct PyTorch wheel depends on your CUDA runtime.
-
-First check whether the machine has CUDA and which CUDA toolkit is visible:
-
-```bash
-nvcc -V
-nvidia-smi
-```
-
-CUDA availability differs across clusters and partitions. Install a PyTorch build that matches the CUDA version you will actually use. Use the official PyTorch selector as the source of truth:
-
-https://pytorch.org/get-started/locally/
-
-CPU-only example:
-
-```bash
-pip install torch torchvision torchaudio
-pip install -r external/DGAT/requirements_CPU.txt
-```
-
-CUDA example, replace the PyTorch command with the one matching your CUDA version from the PyTorch selector:
-
-```bash
-# Example only; choose the correct CUDA build for your cluster.
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install -r external/DGAT/requirements_CUDA.txt
-```
-
-Verify the core imports before running official DGAT prediction:
-
-```bash
-python - <<'PY'
-import torch
-import torch_geometric
-print("torch:", torch.__version__)
-print("torch_geometric:", torch_geometric.__version__)
-print("cuda available:", torch.cuda.is_available())
-PY
-```
-
-Treat the official DGAT repository as the source of truth because dependency pins may change.
-
-Recommended local layout:
+## Repository Contents
 
 ```text
-eccb-dgat-tutorial/
-├── external/
-│   ├── DGAT/
-│   └── DGAT_assets/
-├── data/
-│   ├── raw/
-│   └── processed/
-└── notebooks/
+.
+├── notebooks/
+│   ├── 01_environment_and_spatial_exploration.ipynb
+│   ├── 02_dgat_protein_inference_workflow.ipynb
+│   └── 03_evaluation_and_interpretation.ipynb
+├── scripts/
+│   ├── download_dgat_assets.sh
+│   ├── session01_spatial_exploration.py
+│   ├── session02_dgat_inference_workflow.py
+│   ├── session03_evaluation_interpretation.py
+│   ├── run_official_dgat_prediction.py
+│   └── run_tutorial_demo.py
+├── src/dgat_tutorial/
+│   ├── data.py
+│   ├── dgat.py
+│   ├── evaluation.py
+│   └── plotting.py
+├── data/              # local data outputs, not committed
+├── external/          # downloaded DGAT repo/assets, not committed
+├── results/           # generated tables and figures, not committed
+├── Dockerfile
+├── environment.yml
+├── requirements.txt
+└── tutorial_checklist.md
 ```
 
 ## Download DGAT Data and Model Weights
@@ -230,25 +71,13 @@ The DGAT tutorial data and pretrained model weights are provided in separate Goo
 - Data: https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C
 - Model weights: https://drive.google.com/drive/folders/1uRYhgVgUpkhpE9VTtUB5YmU_hRsf69oD
 
-Download both folders before the tutorial. The key assets are expected to include:
-
-- `DGAT_prediction_ST_data`
-- pretrained model weights containing files such as `encoder_mRNA.pth` and `decoder_protein.pth`
-
-Option A: download manually from the browser.
-
-1. Open both Google Drive folders above.
-2. Download the complete data folder contents into `external/DGAT_assets/data/`.
-3. Download the complete model-weight folder contents into `external/DGAT_assets/model_weights/`.
-
-Option B: download with `gdown`.
+The Quick Start command downloads both folders with `gdown`:
 
 ```bash
-python -m pip install gdown
 bash scripts/download_dgat_assets.sh
 ```
 
-The helper script downloads the data folder into `external/DGAT_assets/data/`, the model-weight folder into `external/DGAT_assets/model_weights/`, and then checks whether `.h5ad` data files and DGAT model weight files were actually downloaded. You can also inspect manually:
+The helper script downloads data into `external/DGAT_assets/data/`, model weights into `external/DGAT_assets/model_weights/`, and checks whether `.h5ad` files and DGAT model weight files were found. You can inspect the downloaded layout with:
 
 ```bash
 ls external/DGAT_assets
@@ -256,7 +85,10 @@ find external/DGAT_assets -name "*.h5ad"
 find external/DGAT_assets \( -name "encoder_mRNA.pth" -o -name "decoder_protein.pth" \)
 ```
 
-If no `.pth` files are found, the model-weight Drive folder did not download correctly. This can happen when Drive contains shortcuts, restricted files, or quota-limited files that `gdown --folder` cannot traverse. In that case, open the model-weight folder manually and download it into `external/DGAT_assets/model_weights/`.
+If `gdown` cannot download a Google Drive folder because of permissions, quota, or shortcut handling, download the folders manually in a browser:
+
+1. Download the complete data folder contents into `external/DGAT_assets/data/`.
+2. Download the complete model-weight folder contents into `external/DGAT_assets/model_weights/`.
 
 The tutorial scripts do not require copying or symlinking asset folders into `external/DGAT/`; they search under `external/DGAT_assets/` automatically.
 
@@ -284,9 +116,140 @@ For paired AnnData files, the expected structure is:
 - shared observation IDs between the RNA and ADT files;
 - spatial coordinates in the RNA file's `adata.obsm["spatial"]` or coordinate columns in `adata.obs`.
 
-Optional precomputed DGAT predictions can still be supplied as `data/raw/dgat_predictions.csv` or generated into `data/processed/predicted_proteins.csv` for the evaluation notebook.
+Optional precomputed DGAT predictions can be supplied as `data/raw/dgat_predictions.csv` or generated into `data/processed/predicted_proteins.csv` for the evaluation notebook.
 
-Large raw datasets, checkpoints, and generated files are intentionally ignored by Git. The GitHub repository should document the official download rather than committing DGAT assets directly.
+Large raw datasets, checkpoints, and generated files are intentionally ignored by Git. The GitHub repository documents the official download rather than committing DGAT assets directly.
+
+## Command-Line Tutorial Path
+
+If you cannot run Jupyter on a remote server or HPC login node, run the same tutorial material as Python scripts:
+
+```bash
+bash scripts/download_dgat_assets.sh
+
+PYTHONPATH=src python scripts/session01_spatial_exploration.py
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py
+PYTHONPATH=src python scripts/session03_evaluation_interpretation.py
+```
+
+If you want to test the code before the DGAT assets finish downloading, add `--allow-demo`:
+
+```bash
+PYTHONPATH=src python scripts/session01_spatial_exploration.py --allow-demo
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --allow-demo
+PYTHONPATH=src python scripts/session03_evaluation_interpretation.py --allow-demo
+```
+
+Script outputs are written to:
+
+- `results/session01_dataset_summary.csv`
+- `results/session01_top_transcripts.csv`
+- `results/session01_top_proteins.csv`
+- `results/session01_spatial_neighbors.csv`
+- `data/processed/predicted_proteins.csv`
+- `results/session03_prediction_correlations.csv`
+- `results/session03_morans_i.csv`
+- `results/figures/*.png`
+
+## Optional: Official DGAT Prediction
+
+The default tutorial environment is designed for smooth notebook execution and data exploration. It does not install the full official DGAT dependency stack.
+
+Install the optional DGAT dependencies only if you want to run the pretrained official DGAT workflow with:
+
+```bash
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --run-official-dgat
+```
+
+First clone the official DGAT repository into `external/`:
+
+```bash
+mkdir -p external
+git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
+```
+
+Then install the full official DGAT dependency stack in the active tutorial environment. The official DGAT code imports PyTorch Geometric (`torch_geometric`), so the default tutorial dependencies are not sufficient for `--run-official-dgat`. Install PyTorch first, because the correct PyTorch wheel depends on your CUDA runtime.
+
+Check which CUDA toolkit and driver are visible on the machine:
+
+```bash
+nvcc -V
+nvidia-smi
+```
+
+CUDA availability differs across laptops, clusters, and partitions. Install a PyTorch build that matches the CUDA version you will actually use. Use the official PyTorch selector as the source of truth:
+
+https://pytorch.org/get-started/locally/
+
+CPU-only example:
+
+```bash
+pip install torch torchvision torchaudio
+pip install -r external/DGAT/requirements_CPU.txt
+```
+
+CUDA example, replace the PyTorch command with the one matching your CUDA version from the PyTorch selector:
+
+```bash
+# Example only; choose the correct CUDA build for your machine.
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install -r external/DGAT/requirements_CUDA.txt
+```
+
+Verify the core imports before running official DGAT prediction:
+
+```bash
+python - <<'PY'
+import torch
+import torch_geometric
+print("torch:", torch.__version__)
+print("torch_geometric:", torch_geometric.__version__)
+print("cuda available:", torch.cuda.is_available())
+PY
+```
+
+Then run official prediction:
+
+```bash
+PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
+  --dgat-repo external/DGAT \
+  --output data/processed/predicted_proteins.csv
+```
+
+The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It uses the downloaded RNA `.h5ad` file, resolves compatible `common_gene_*.txt` and `common_protein_*.txt` files from the DGAT repository/model assets, auto-discovers pretrained weights by searching for `encoder_mRNA.pth` and `decoder_protein.pth`, and writes:
+
+```text
+data/processed/predicted_proteins.csv
+```
+
+Treat the official DGAT repository as the source of truth because dependency pins may change.
+
+## Optional: Docker Fallback
+
+Docker is provided as a fallback for participants who cannot get conda working locally. The Docker image builds the default tutorial environment only; it does not include the optional official DGAT/PyTorch Geometric stack.
+
+```bash
+docker build -t eccb-dgat-tutorial .
+docker run --rm -it -p 8888:8888 -v "$PWD":/workspace eccb-dgat-tutorial
+```
+
+Then open the JupyterLab URL printed in the terminal, or visit:
+
+```text
+http://localhost:8888/lab
+```
+
+The volume mount lets downloaded assets and generated results persist in your local checkout.
+
+## Optional: Pip Installation
+
+Conda is the recommended setup for tutorial participants. If you already have a compatible Python environment, you can install the default notebook dependencies with pip:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 ## DGAT Prediction Output Contract
 
@@ -322,31 +285,6 @@ Outputs:
 - `data/processed/demo_observed_proteins.csv`
 - `data/processed/predicted_proteins.csv`
 - `results/demo_prediction_correlations.csv`
-
-## Jupyter Notebook Demo
-
-The main tutorial is notebook-based. Start Jupyter Lab:
-
-```bash
-jupyter lab
-```
-
-Run the notebooks in order:
-
-1. `notebooks/01_environment_and_spatial_exploration.ipynb`
-   - environment check
-   - spatial transcript/protein data loading
-   - coordinate and neighborhood exploration
-2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
-   - input alignment
-   - official DGAT prediction handoff
-   - `data/raw/dgat_predictions.csv` fallback
-   - predicted protein visualization
-3. `notebooks/03_evaluation_and_interpretation.ipynb`
-   - Pearson/Spearman evaluation
-   - Moran's I spatial coherence
-   - transcript versus observed and inferred protein comparison
-   - biological interpretation prompts
 
 ## Learning Objectives
 

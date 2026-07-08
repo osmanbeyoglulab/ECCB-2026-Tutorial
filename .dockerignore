@@ -1,0 +1,17 @@
+.git
+.gitignore
+.dockerignore
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.pyc
+*.pyo
+.DS_Store
+.venv/
+*.egg-info/
+external/
+data/
+results/
+outputs/~$*
