@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from dgat_tutorial.data import load_demo_data
-from dgat_tutorial.dgat import run_demo_dgat_inference
+from dgat_tutorial.dgat import run_demo_dgat_inference, write_prediction_artifact
 from dgat_tutorial.evaluation import protein_correlations
 
 
@@ -21,10 +21,16 @@ def main() -> None:
     dataset.spots.to_csv(processed_dir / "demo_spots.csv")
     dataset.transcripts.to_csv(processed_dir / "demo_transcripts.csv")
     dataset.proteins.to_csv(processed_dir / "demo_observed_proteins.csv")
-    predictions.to_csv(processed_dir / "predicted_proteins.csv")
+    write_prediction_artifact(
+        predictions,
+        processed_dir / "predicted_proteins.csv",
+        method="out_of_fold_ridge_baseline",
+        source="synthetic tutorial RNA/protein matrices",
+        evaluation_note="Not DGAT; every row is out-of-fold, avoiding in-sample evaluation.",
+    )
     correlations.to_csv(results_dir / "demo_prediction_correlations.csv", index=False)
 
-    print("Demo predictions written to data/processed/predicted_proteins.csv")
+    print("Out-of-fold ridge baseline (not DGAT) written to data/processed/predicted_proteins.csv")
     print("Demo correlations written to results/demo_prediction_correlations.csv")
     print(correlations.to_string(index=False))
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -13,32 +14,60 @@ def run_demo_dgat_inference(
     transcripts: pd.DataFrame,
     reference_proteins: pd.DataFrame,
     random_state: int = 7,
+    n_splits: int = 5,
+    max_observations: int = 2_000,
 ) -> pd.DataFrame:
-    """Return DGAT-like protein predictions for tutorial dry runs.
+    """Return out-of-fold ridge predictions for tutorial dry runs.
 
-    This lightweight baseline keeps the notebooks executable without the official
-    DGAT environment. For the live tutorial, use the official DGAT repository:
-    https://github.com/osmanbeyoglulab/DGAT
+    This is deliberately not called DGAT. Every row is predicted by a model that
+    was fitted without that row, avoiding the in-sample leakage present in the
+    original tutorial fallback. It remains a baseline for environment checks;
+    use official or precomputed DGAT predictions for the tutorial results.
     """
 
-    rng = np.random.default_rng(random_state)
     x = np.log1p(transcripts.to_numpy(dtype=float))
     y = reference_proteins.to_numpy(dtype=float)
+    if len(x) < 2:
+        raise ValueError("The out-of-fold ridge baseline requires at least two observations.")
+    if len(x) > max_observations:
+        raise ValueError(
+            f"The optional ridge baseline is limited to {max_observations:,} observations to avoid "
+            "unexpected memory/CPU load. Use precomputed or official DGAT predictions for the full dataset."
+        )
 
-    x_mean = x.mean(axis=0, keepdims=True)
-    x_std = x.std(axis=0, keepdims=True) + 1e-8
-    y_mean = y.mean(axis=0, keepdims=True)
-    y_std = y.std(axis=0, keepdims=True) + 1e-8
-    x_scaled = (x - x_mean) / x_std
-    y_scaled = (y - y_mean) / y_std
+    n_splits = min(n_splits, len(x))
+    predicted = np.empty_like(y, dtype=float)
+    rng = np.random.default_rng(random_state)
+    folds = np.array_split(rng.permutation(len(x)), n_splits)
+    all_indices = np.arange(len(x))
+    for test_idx in folds:
+        train_idx = np.setdiff1d(all_indices, test_idx, assume_unique=True)
+        x_train, x_test = x[train_idx], x[test_idx]
+        y_train = y[train_idx]
+        x_mean = x_train.mean(axis=0, keepdims=True)
+        x_std = x_train.std(axis=0, keepdims=True) + 1e-8
+        y_mean = y_train.mean(axis=0, keepdims=True)
+        y_std = y_train.std(axis=0, keepdims=True) + 1e-8
+        x_train_scaled = (x_train - x_mean) / x_std
+        x_test_scaled = (x_test - x_mean) / x_std
+        y_train_scaled = (y_train - y_mean) / y_std
 
-    x_design = np.column_stack([np.ones(x_scaled.shape[0]), x_scaled])
-    ridge = 0.25 * np.eye(x_design.shape[1])
-    ridge[0, 0] = 0
-    coefficients = np.linalg.solve(x_design.T @ x_design + ridge, x_design.T @ y_scaled)
-    predicted = x_design @ coefficients
-    predicted = predicted * y_std + y_mean
-    predicted += rng.normal(scale=0.03, size=predicted.shape)
+        alpha = 0.25
+        if x_train_scaled.shape[1] <= x_train_scaled.shape[0]:
+            gram = x_train_scaled.T @ x_train_scaled
+            coefficients = np.linalg.solve(
+                gram + alpha * np.eye(gram.shape[0]),
+                x_train_scaled.T @ y_train_scaled,
+            )
+            scaled_prediction = x_test_scaled @ coefficients
+        else:
+            gram = x_train_scaled @ x_train_scaled.T
+            dual = np.linalg.solve(
+                gram + alpha * np.eye(gram.shape[0]),
+                y_train_scaled,
+            )
+            scaled_prediction = (x_test_scaled @ x_train_scaled.T) @ dual
+        predicted[test_idx] = scaled_prediction * y_std + y_mean
 
     return pd.DataFrame(predicted, index=transcripts.index, columns=reference_proteins.columns)
 
@@ -48,6 +77,45 @@ def load_prediction_table(path: str) -> pd.DataFrame:
 
     sep = "\t" if path.endswith(".tsv") else ","
     return pd.read_csv(path, sep=sep, index_col=0)
+
+
+def write_prediction_artifact(
+    predictions: pd.DataFrame,
+    path: str | Path,
+    *,
+    method: str,
+    source: str,
+    evaluation_note: str,
+) -> Path:
+    """Write predictions plus a small provenance sidecar used by Session 3."""
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    predictions.to_csv(path)
+    metadata_path = path.with_suffix(".metadata.json")
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "method": method,
+                "source": source,
+                "evaluation_note": evaluation_note,
+                "rows": len(predictions),
+                "proteins": predictions.shape[1],
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    return metadata_path
+
+
+def load_prediction_metadata(path: str | Path) -> dict[str, object] | None:
+    """Load a prediction provenance sidecar when one is available."""
+
+    metadata_path = Path(path).with_suffix(".metadata.json")
+    if not metadata_path.exists():
+        return None
+    return json.loads(metadata_path.read_text())
 
 
 def run_official_dgat_prediction(
@@ -77,25 +145,23 @@ def run_official_dgat_prediction(
         )
     if not rna_h5ad_path.exists():
         raise FileNotFoundError(f"RNA AnnData file not found: {rna_h5ad_path}")
-    if not model_save_dir.exists():
-        discovered_model_dir = discover_dgat_model_dir(
-            [
-                model_save_dir,
-                model_save_dir.parent,
-                dgat_repo_dir / "DGAT_pretrained_models",
-                dgat_repo_dir,
-                Path("external") / "DGAT_assets",
-            ]
+    discovered_model_dir = discover_dgat_model_dir(
+        [
+            model_save_dir,
+            model_save_dir.parent,
+            dgat_repo_dir / "DGAT_pretrained_models",
+            dgat_repo_dir,
+            Path("external") / "DGAT_assets",
+        ]
+    )
+    if discovered_model_dir is None:
+        raise FileNotFoundError(
+            f"No compatible DGAT checkpoints were found under {model_save_dir} or the standard asset locations. "
+            "Both encoder_mRNA.pth and decoder_protein.pth must be present in the same checkpoint directory."
         )
-        if discovered_model_dir is None:
-            raise FileNotFoundError(
-                f"DGAT pretrained model directory not found: {model_save_dir}. "
-                "Searched common asset locations for encoder_mRNA.pth and decoder_protein.pth. "
-                "Run `find external -name encoder_mRNA.pth -o -name decoder_protein.pth` to locate the downloaded model, "
-                "then pass its parent directory with `--model-save-dir`."
-            )
+    if discovered_model_dir != model_save_dir:
         print(f"Using discovered DGAT pretrained model directory: {discovered_model_dir}")
-        model_save_dir = discovered_model_dir
+    model_save_dir = discovered_model_dir
 
     common_gene_path, common_protein_path = resolve_dgat_resource_files(
         dgat_repo_dir=dgat_repo_dir,
@@ -144,8 +210,15 @@ def run_official_dgat_prediction(
         str(model_save_dir),
         str(pyg_data_dir),
     )
-    predictions = pd.DataFrame(predictions, index=adata.obs_names)
-    return predictions
+    if hasattr(predictions, "X"):
+        matrix = predictions.X.toarray() if hasattr(predictions.X, "toarray") else np.asarray(predictions.X)
+        columns = [str(name) for name in predictions.var_names]
+        index = predictions.obs_names
+    else:
+        matrix = np.asarray(predictions)
+        columns = common_protein
+        index = adata.obs_names
+    return pd.DataFrame(matrix, index=index, columns=columns)
 
 
 def read_feature_list(path: str | Path) -> list[str]:

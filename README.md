@@ -16,16 +16,23 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 
 ## Quick Start
 
-The default tutorial path uses one conda environment and the official DGAT `.h5ad` data assets. Official DGAT model execution is optional and described later.
+### Complete this before the tutorial
+
+Do not wait for the conference network. In one review, downloading the data and model assets took about **15 minutes on a workstation** and may take substantially longer on conference Wi-Fi. Participants should complete setup at least 24 hours before the session, open all three notebooks, and run the asset check.
+
+The participant path uses a lightweight Python 3.10 environment, official DGAT `.h5ad` data, and an organizer-provided table of precomputed **official DGAT** predictions. It does not train or run DGAT during the live session.
 
 ```bash
 git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
 cd ECCB-2026-Tutorial
 conda env create -f environment.yml
 conda activate eccb-dgat-tutorial
-bash scripts/download_dgat_assets.sh
+bash scripts/download_dgat_assets.sh --data-only
+bash scripts/download_dgat_assets.sh --data-only --check-only
 jupyter lab
 ```
+
+Organizers must distribute `dgat_predictions.csv` and its `dgat_predictions.metadata.json` provenance sidecar in advance and ask participants to place both under `data/raw/`. Notebook 2 now stops with a clear message if the prediction table is absent; it no longer silently substitutes a fitted ridge model.
 
 Open the notebooks in order:
 
@@ -33,7 +40,35 @@ Open the notebooks in order:
 2. `notebooks/02_dgat_protein_inference_workflow.ipynb`
 3. `notebooks/03_evaluation_and_interpretation.ipynb`
 
-The default environment includes the packages needed for the tutorial notebooks, including JupyterLab, Scanpy, AnnData, Squidpy, scikit-learn, matplotlib, pandas, NumPy, SciPy, seaborn, and gdown. It intentionally does not directly install PyTorch Geometric or the full official DGAT dependency stack.
+The default environment includes the packages needed for the tutorial notebooks. It intentionally excludes PyTorch and PyTorch Geometric; official DGAT inference uses the separate Python 3.11 environment described below.
+
+## System Requirements and Planning Runtimes
+
+### Participant path (recommended)
+
+- 64-bit macOS, Linux, or Windows with WSL2; Conda or Mamba; a current browser.
+- 4 CPU cores and 16 GB RAM recommended (8 GB is the practical minimum).
+- 10 GB free disk space recommended for environments, downloaded data, and outputs.
+- No GPU is required because the live path loads precomputed DGAT predictions.
+
+Planning estimates for a typical 4-core/16-GB laptop are shown below. These are ranges, not guarantees; organizers should record measurements on the final released assets and a clean reference machine.
+
+| Step | Expected time | Notes |
+| --- | ---: | --- |
+| Create tutorial environment | 5–15 min | Mostly package download/solve time |
+| Download DGAT data | ~15 min on the review workstation | Allow 30–60+ min on conference Wi-Fi |
+| Notebook 1 | 3–8 min | Data loading and spatial exploration |
+| Notebook 2, precomputed predictions | 1–3 min | Alignment and plotting; no model fitting |
+| Notebook 3 | 2–5 min | Evaluation and spatial metrics |
+
+Notebook 2 no longer writes full transcript and protein matrices to CSV; those redundant writes were a major avoidable source of memory pressure and disk activity.
+
+### Official DGAT inference (optional, advanced)
+
+- Use the separate `eccb-dgat-official` environment with Python 3.11.
+- 16 GB RAM is the minimum recommendation; 32 GB and an NVIDIA GPU are preferred for larger datasets.
+- CPU execution is supported upstream but can be substantially slower. Runtime depends on tissue size, graph construction, storage, and accelerator; benchmark the exact dataset before relying on it.
+- Run official inference before the tutorial or on pre-arranged workstation/HPC infrastructure. Do not make the live session depend on installing or running the model.
 
 ## Repository Contents
 
@@ -59,6 +94,7 @@ The default environment includes the packages needed for the tutorial notebooks,
 ├── external/          # downloaded DGAT repo/assets, not committed
 ├── results/           # generated tables and figures, not committed
 ├── Dockerfile
+├── environment-dgat-cpu.yml
 ├── environment.yml
 ├── requirements.txt
 └── tutorial_checklist.md
@@ -71,10 +107,17 @@ The DGAT tutorial data and pretrained model weights are provided in separate Goo
 - Data: https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C
 - Model weights: https://drive.google.com/drive/folders/1uRYhgVgUpkhpE9VTtUB5YmU_hRsf69oD
 
-The Quick Start command downloads both folders with `gdown`:
+Download only the data needed by participants:
+
+```bash
+bash scripts/download_dgat_assets.sh --data-only
+```
+
+Organizers preparing official predictions should download both data and checkpoints by omitting `--data-only`. The downloader skips complete existing folders, supports `--force`, reports elapsed time, and offers a no-download check:
 
 ```bash
 bash scripts/download_dgat_assets.sh
+bash scripts/download_dgat_assets.sh --check-only
 ```
 
 The helper script downloads data into `external/DGAT_assets/data/`, model weights into `external/DGAT_assets/model_weights/`, and checks whether `.h5ad` files and DGAT model weight files were found. You can inspect the downloaded layout with:
@@ -132,13 +175,15 @@ PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py
 PYTHONPATH=src python scripts/session03_evaluation_interpretation.py
 ```
 
-If you want to test the code before the DGAT assets finish downloading, add `--allow-demo`:
+If you want to test the code before the DGAT assets finish downloading, use synthetic data and explicitly request the out-of-fold ridge baseline:
 
 ```bash
 PYTHONPATH=src python scripts/session01_spatial_exploration.py --allow-demo
-PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --allow-demo
-PYTHONPATH=src python scripts/session03_evaluation_interpretation.py --allow-demo
+PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --allow-demo --demo-baseline
+PYTHONPATH=src python scripts/session03_evaluation_interpretation.py --allow-demo --demo-baseline
 ```
+
+The baseline is not DGAT. It produces out-of-fold predictions so Notebook 3 does not evaluate rows used to fit their own predictions.
 
 Script outputs are written to:
 
@@ -151,14 +196,15 @@ Script outputs are written to:
 - `results/session03_morans_i.csv`
 - `results/figures/*.png`
 
-## Optional: Official DGAT Prediction
+## Optional: Official DGAT Prediction in a Separate Environment
 
 The default tutorial environment is designed for smooth notebook execution and data exploration. It does not install the full official DGAT dependency stack.
 
-Install the optional DGAT dependencies only if you want to run the pretrained official DGAT workflow with:
+The official DGAT repository currently targets Python 3.11 and pins SciPy 1.16.0. Do not install its requirements into the Python 3.10 tutorial environment. Create the dedicated environment instead:
 
 ```bash
-PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py --run-official-dgat
+conda env create -f environment-dgat-cpu.yml
+conda activate eccb-dgat-official
 ```
 
 First clone the official DGAT repository into `external/`:
@@ -168,9 +214,14 @@ mkdir -p external
 git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
 ```
 
-Then install the full official DGAT dependency stack in the active tutorial environment. The official DGAT code imports PyTorch Geometric (`torch_geometric`), so the default tutorial dependencies are not sufficient for `--run-official-dgat`. Install PyTorch first, because the correct PyTorch wheel depends on your CUDA runtime.
+Download both data and model weights, then run the preflight check:
 
-Check which CUDA toolkit and driver are visible on the machine:
+```bash
+bash scripts/download_dgat_assets.sh
+PYTHONPATH=src python scripts/check_dgat_environment.py
+```
+
+The supplied environment is CPU-oriented. For CUDA, create a separate Python 3.11 environment, install the PyTorch build matching the cluster's driver/toolkit, and then install the remaining packages from the upstream `requirements_torch_ready.txt`. Check the machine first:
 
 ```bash
 nvcc -V
@@ -181,19 +232,12 @@ CUDA availability differs across laptops, clusters, and partitions. Install a Py
 
 https://pytorch.org/get-started/locally/
 
-CPU-only example:
-
-```bash
-pip install torch torchvision torchaudio
-pip install -r external/DGAT/requirements_CPU.txt
-```
-
-CUDA example, replace the PyTorch command with the one matching your CUDA version from the PyTorch selector:
+CUDA example (replace this command with the current selector output for your machine):
 
 ```bash
 # Example only; choose the correct CUDA build for your machine.
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install -r external/DGAT/requirements_CUDA.txt
+pip install -r external/DGAT/requirements_torch_ready.txt
 ```
 
 Verify the core imports before running official DGAT prediction:
@@ -216,7 +260,14 @@ PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
   --output data/processed/predicted_proteins.csv
 ```
 
-The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It uses the downloaded RNA `.h5ad` file, resolves compatible `common_gene_*.txt` and `common_protein_*.txt` files from the DGAT repository/model assets, auto-discovers pretrained weights by searching for `encoder_mRNA.pth` and `decoder_protein.pth`, and writes:
+Prepare the two participant files without discarding provenance:
+
+```bash
+cp data/processed/predicted_proteins.csv data/raw/dgat_predictions.csv
+cp data/processed/predicted_proteins.metadata.json data/raw/dgat_predictions.metadata.json
+```
+
+The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It uses the downloaded RNA `.h5ad` file, resolves compatible feature lists, requires a checkpoint directory containing both expected weight files, handles DGAT's AnnData return value, and writes the prediction table plus a provenance sidecar.
 
 ```text
 data/processed/predicted_proteins.csv
@@ -270,9 +321,9 @@ spot_001,0.39,1.18,0.10,2.27,0.61,0.79
 
 For the live tutorial, run the official DGAT prediction workflow once as a demonstration, then let everyone continue from `data/raw/dgat_predictions.csv`. This keeps the tutorial focused on spatial data preparation, predicted protein landscapes, and biological interpretation instead of installation troubleshooting.
 
-## Script Demo
+## Explicit Baseline Demo
 
-The repository includes a lightweight script demo that uses synthetic spatial-CITE-seq-like data. This is not the official DGAT model and should only be used to verify the tutorial environment and output format when DGAT assets are not yet downloaded.
+The repository includes a lightweight script demo using synthetic spatial-CITE-seq-like data and an out-of-fold ridge baseline. This is not DGAT and is only for verifying the environment and output format.
 
 ```bash
 PYTHONPATH=src python scripts/run_tutorial_demo.py
@@ -304,8 +355,8 @@ See `tutorial_checklist.md` for a review checklist aligned with the 1 July draft
 Minimum items to finalize before committee review:
 
 - Choose the exact official DGAT notebook or command to demonstrate live.
-- Generate a real `data/raw/dgat_predictions.csv` from the tutorial dataset.
+- Generate a real `data/raw/dgat_predictions.csv` from the tutorial dataset, retain its provenance sidecar, and distribute both before the session.
 - Confirm the official DGAT checkpoint and data download works on a clean machine.
 - Confirm the notebooks can read the downloaded DGAT `.h5ad` file directly.
-- Record expected runtime and whether CPU is sufficient.
+- Replace the planning runtime ranges with measurements from the final assets and reference machine.
 - Render or execute all notebooks once before upload.

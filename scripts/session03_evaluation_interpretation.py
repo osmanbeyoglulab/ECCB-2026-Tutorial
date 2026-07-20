@@ -8,7 +8,7 @@ import pandas as pd
 import seaborn as sns
 
 from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
-from dgat_tutorial.dgat import run_demo_dgat_inference
+from dgat_tutorial.dgat import load_prediction_metadata, run_demo_dgat_inference, write_prediction_artifact
 from dgat_tutorial.evaluation import morans_i, protein_correlations
 from dgat_tutorial.plotting import plot_correlation_bar, plot_spatial_feature
 
@@ -19,6 +19,11 @@ def main() -> None:
     parser.add_argument("--processed-dir", type=Path, default=Path("data/processed"))
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--allow-demo", action="store_true", help="Use synthetic fallback data if no DGAT .h5ad is found.")
+    parser.add_argument(
+        "--demo-baseline",
+        action="store_true",
+        help="Generate an out-of-fold ridge baseline if Session 2 output is missing (not DGAT).",
+    )
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -40,8 +45,27 @@ def main() -> None:
     prediction_path = args.processed_dir / "predicted_proteins.csv"
     if prediction_path.exists():
         predicted_proteins = pd.read_csv(prediction_path, index_col=0)
-    else:
+    elif args.demo_baseline:
         predicted_proteins = run_demo_dgat_inference(transcripts, proteins)
+        write_prediction_artifact(
+            predicted_proteins,
+            prediction_path,
+            method="out_of_fold_ridge_baseline",
+            source="observed tutorial RNA/protein matrices",
+            evaluation_note="Not DGAT; each row is out-of-fold, so evaluation is not in-sample.",
+        )
+    else:
+        raise FileNotFoundError(
+            f"Missing {prediction_path}. Run Session 2 with precomputed or official DGAT predictions first. "
+            "Use --demo-baseline only for the explicitly labeled out-of-fold ridge baseline."
+        )
+
+    prediction_metadata = load_prediction_metadata(prediction_path)
+    if prediction_metadata is None:
+        print("WARNING: prediction provenance is unknown; confirm these predictions were not fitted on the evaluation rows.")
+    else:
+        print(f"Prediction method: {prediction_metadata['method']}")
+        print(f"Evaluation note: {prediction_metadata['evaluation_note']}")
 
     common_spots = spots.index.intersection(proteins.index).intersection(predicted_proteins.index)
     spots = spots.loc[common_spots]

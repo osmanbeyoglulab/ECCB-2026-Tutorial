@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 
 from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair
-from dgat_tutorial.dgat import run_official_dgat_prediction
+from dgat_tutorial.dgat import run_official_dgat_prediction, write_prediction_artifact
 
 
 def main() -> None:
@@ -34,9 +34,14 @@ def main() -> None:
         common_gene_path=args.common_gene,
         common_protein_path=args.common_protein,
     )
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    predictions.to_csv(args.output)
-    print(f"Wrote official DGAT predictions to {args.output}")
+    write_prediction_artifact(
+        predictions,
+        args.output,
+        method="official_dgat",
+        source=str(rna_h5ad),
+        evaluation_note="Official pretrained DGAT inference.",
+    )
+    print(f"Wrote official DGAT predictions and provenance to {args.output}")
 
 
 if __name__ == "__main__":

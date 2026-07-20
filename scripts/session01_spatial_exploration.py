@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.neighbors import NearestNeighbors
 
 from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
 from dgat_tutorial.plotting import plot_spatial_feature
@@ -103,9 +104,8 @@ def main() -> None:
     plt.close(fig)
 
     xy = spots[["x", "y"]].to_numpy()
-    distance_matrix = np.sqrt(((xy[:, None, :] - xy[None, :, :]) ** 2).sum(axis=2))
-    neighbor_indices = np.argsort(distance_matrix, axis=1)[:, :7]
-    distances = np.take_along_axis(distance_matrix, neighbor_indices, axis=1)
+    neighbor_count = min(7, len(spots))
+    distances, neighbor_indices = NearestNeighbors(n_neighbors=neighbor_count).fit(xy).kneighbors(xy)
     neighbors = pd.DataFrame(
         {
             "spot_id": spots.index,

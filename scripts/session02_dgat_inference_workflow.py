@@ -6,7 +6,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
-from dgat_tutorial.dgat import load_prediction_table, run_demo_dgat_inference, run_official_dgat_prediction
+from dgat_tutorial.dgat import (
+    load_prediction_table,
+    load_prediction_metadata,
+    run_demo_dgat_inference,
+    run_official_dgat_prediction,
+    write_prediction_artifact,
+)
 from dgat_tutorial.plotting import plot_spatial_feature
 
 
@@ -17,6 +23,11 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--predictions", type=Path, default=None, help="Optional precomputed DGAT prediction CSV/TSV.")
     parser.add_argument("--run-official-dgat", action="store_true", help="Run official DGAT protein_predict if no prediction table is found.")
+    parser.add_argument(
+        "--demo-baseline",
+        action="store_true",
+        help="Explicitly run the out-of-fold ridge baseline (not DGAT).",
+    )
     parser.add_argument("--dgat-repo", type=Path, default=Path("external/DGAT"))
     parser.add_argument("--model-save-dir", type=Path, default=Path("external/DGAT_assets/DGAT_pretrained_models"))
     parser.add_argument("--pyg-data-dir", type=Path, default=Path("data/processed/dgat_pyg"))
@@ -46,10 +57,10 @@ def main() -> None:
     proteins = proteins.loc[common_spots]
 
     prediction_path = args.predictions or args.data_dir / "dgat_predictions.csv"
-    if prediction_path.exists():
-        predicted_proteins = load_prediction_table(str(prediction_path))
-        print(f"Loaded precomputed DGAT predictions: {prediction_path}")
-    elif args.run_official_dgat:
+    if args.run_official_dgat and args.demo_baseline:
+        parser.error("Choose only one of --run-official-dgat and --demo-baseline.")
+
+    if args.run_official_dgat:
         rna_h5ad = dgat_h5ad_pair[0] if dgat_h5ad_pair else dgat_h5ad
         if rna_h5ad is None:
             raise FileNotFoundError("Could not find RNA .h5ad for official DGAT prediction.")
@@ -61,12 +72,42 @@ def main() -> None:
             common_gene_path=args.common_gene,
             common_protein_path=args.common_protein,
         )
+        method = "official_dgat"
+        source = str(rna_h5ad)
+        evaluation_note = "Official pretrained DGAT inference."
         print("Generated predictions with official DGAT protein_predict.")
-    else:
+    elif args.demo_baseline:
         predicted_proteins = run_demo_dgat_inference(transcripts, proteins)
-        print("Generated demo DGAT-like predictions because no prediction table was found. Use --run-official-dgat for pretrained DGAT.")
+        method = "out_of_fold_ridge_baseline"
+        source = "observed tutorial RNA/protein matrices"
+        evaluation_note = "Not DGAT; each row is out-of-fold, so evaluation is not in-sample."
+        print("Generated explicit out-of-fold ridge baseline (not DGAT).")
+    elif prediction_path.exists():
+        predicted_proteins = load_prediction_table(str(prediction_path))
+        input_metadata = load_prediction_metadata(prediction_path)
+        method = str(input_metadata["method"]) if input_metadata else "precomputed_dgat"
+        source = str(input_metadata["source"]) if input_metadata else str(prediction_path)
+        evaluation_note = (
+            str(input_metadata["evaluation_note"])
+            if input_metadata
+            else "Evaluate only if this table was generated without fitting on the observed evaluation proteins."
+        )
+        print(f"Loaded precomputed DGAT predictions: {prediction_path}")
+    else:
+        raise FileNotFoundError(
+            f"No precomputed DGAT prediction table found at {prediction_path}. "
+            "Provide --predictions PATH, use --run-official-dgat in the separate Python 3.11 DGAT environment, "
+            "or use --demo-baseline only for an explicitly labeled baseline."
+        )
 
-    predicted_proteins.to_csv(args.processed_dir / "predicted_proteins.csv")
+    output_path = args.processed_dir / "predicted_proteins.csv"
+    write_prediction_artifact(
+        predicted_proteins,
+        output_path,
+        method=method,
+        source=source,
+        evaluation_note=evaluation_note,
+    )
 
     proteins_to_plot = list(predicted_proteins.columns[:4])
     n_cols = min(4, len(proteins_to_plot))
@@ -79,7 +120,7 @@ def main() -> None:
     plt.savefig(fig_dir / "session02_predicted_proteins.png", dpi=160)
     plt.close(fig)
 
-    print(f"Wrote predictions to {args.processed_dir / 'predicted_proteins.csv'}")
+    print(f"Wrote predictions and provenance to {output_path}")
 
 
 if __name__ == "__main__":

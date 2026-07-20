@@ -41,12 +41,20 @@ def spatial_weights(coordinates: pd.DataFrame, radius: float | None = None) -> n
 def morans_i(values: pd.Series, coordinates: pd.DataFrame, radius: float | None = None) -> float:
     """Compute Moran's I for one spatial feature."""
 
+    from scipy.spatial import cKDTree
+
     aligned_coordinates = coordinates.loc[values.index]
-    weights = spatial_weights(aligned_coordinates, radius=radius)
+    xy = aligned_coordinates[["x", "y"]].to_numpy(dtype=float)
+    tree = cKDTree(xy)
+    if radius is None:
+        nearest_distances, _ = tree.query(xy, k=2)
+        radius = float(np.median(nearest_distances[:, 1]) * 1.8)
+    pairs = tree.query_pairs(radius, output_type="ndarray")
     x = values.to_numpy(dtype=float)
     centered = x - x.mean()
-    numerator = np.sum(weights * np.outer(centered, centered))
     denominator = np.sum(centered**2)
-    if denominator == 0 or weights.sum() == 0:
+    if denominator == 0 or len(pairs) == 0:
         return float("nan")
-    return float((len(x) / weights.sum()) * (numerator / denominator))
+    numerator = 2.0 * np.sum(centered[pairs[:, 0]] * centered[pairs[:, 1]])
+    weight_sum = 2.0 * len(pairs)
+    return float((len(x) / weight_sum) * (numerator / denominator))
