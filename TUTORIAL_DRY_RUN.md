@@ -31,6 +31,22 @@ This log records a clean-room setup from the remote repository on an Apple-silic
 
 The managed execution sandbox initially denied Jupyter's localhost kernel socket. Re-running with local kernel networking permitted resolved it; this is not a tutorial repository defect.
 
+During the final repetition, the already-created isolated environment was reused and its editable package install was repointed to the new clone. Pip's build-isolation subprocess initially could not resolve PyPI inside the restricted sandbox; the same command passed when network access was permitted. A new participant following `conda env create -f environment.yml` does not perform this extra repointing step. The validation command also supplied an unsupported nbconvert `ExecutePreprocessor.cwd` option for Notebook 1; nbconvert ignored it, the notebook found the repository correctly, and the option was removed from the remaining test commands. Neither condition requires a repository change.
+
 ## Final measured notebook pass
 
-All three current notebooks executed top-to-bottom with the official Breast data and official DGAT predictions. Observed peak resident memory was approximately 2.0 GB for Notebook 1, 1.0 GB for Notebook 2, and 0.9 GB for Notebook 3. A final fresh-clone repetition is required after this fix commit is pushed.
+All three current notebooks executed top-to-bottom with the official Breast data and official DGAT predictions. Observed peak resident memory was approximately 2.0 GB for Notebook 1, 1.0 GB for Notebook 2, and 0.9 GB for Notebook 3.
+
+## Final remote-clone repetition
+
+After fix commit `809f02b` was pushed to `origin/main`, a new shallow SSH clone was created in an isolated temporary directory and verified at exactly that commit. The committed prediction table SHA-256 matched its provenance sidecar (`d28edda9f85bcf851d475d1b903de32fec925c05d798fecb585e723312c683b7`). The README participant download command fetched only `Breast_ADT.h5ad` and `Breast_RNA.h5ad` (approximately 270 MB) in 156 seconds, and the documented `--check-only` command passed without requesting model weights.
+
+The three notebooks then passed in order with fresh kernels:
+
+| Notebook | Elapsed time | Verified result |
+| --- | ---: | --- |
+| 1 | 42.4 s | Loaded 4,169 spots, 18,085 genes, and 35 measured proteins from the paired Breast files. |
+| 2 | 7.6 s | Loaded the repository-provided official DGAT predictions and aligned all 4,169 spots. |
+| 3 | 8.3 s | Evaluated 31 shared proteins; Pearson correlations ranged from -0.288 to 0.711 and Moran's I completed for every protein. |
+
+No additional repository defect was found in the final remote-clone participant path.
