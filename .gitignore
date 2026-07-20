@@ -16,6 +16,8 @@ __pycache__/
 external/
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/dgat_predictions.csv
+!data/raw/dgat_predictions.metadata.json
 data/processed/*
 !data/processed/.gitkeep
 results/*

@@ -18,21 +18,28 @@ Official DGAT repository: https://github.com/osmanbeyoglulab/DGAT
 
 ### Complete this before the tutorial
 
-Do not wait for the conference network. In one review, downloading the data and model assets took about **15 minutes on a workstation** and may take substantially longer on conference Wi-Fi. Participants should complete setup at least 24 hours before the session, open all three notebooks, and run the asset check.
+Do not wait for the conference network. In one review, downloading the full data and model bundle took about **15 minutes on a workstation** and may take substantially longer on conference Wi-Fi. The participant shortcut now fetches only the roughly 270 MB Breast pair, but participants should still complete setup at least 24 hours before the session, open all three notebooks, and run the asset check.
 
-The participant path uses a lightweight Python 3.10 environment, official DGAT `.h5ad` data, and an organizer-provided table of precomputed **official DGAT** predictions. It does not train or run DGAT during the live session.
+The participant path uses a lightweight Python 3.10 environment, official DGAT `.h5ad` data, and the repository-provided table of precomputed **official DGAT** predictions. It does not train or run DGAT during the live session.
 
 ```bash
 git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
 cd ECCB-2026-Tutorial
 conda env create -f environment.yml
 conda activate eccb-dgat-tutorial
-bash scripts/download_dgat_assets.sh --data-only
-bash scripts/download_dgat_assets.sh --data-only --check-only
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only
 jupyter lab
 ```
 
-Organizers must distribute `dgat_predictions.csv` and its `dgat_predictions.metadata.json` provenance sidecar in advance and ask participants to place both under `data/raw/`. Notebook 2 now stops with a clear message if the prediction table is absent; it no longer silently substitutes a fitted ridge model.
+The repository includes verified Breast predictions at `data/raw/dgat_predictions.csv` and a provenance sidecar recording the DGAT commit and checkpoint hashes. Notebook 2 stops with a clear message if either participant input is absent; it never silently substitutes a fitted ridge model.
+
+If Conda reports that `eccb-dgat-tutorial` already exists, update the existing environment instead of recreating it:
+
+```bash
+conda env update -n eccb-dgat-tutorial -f environment.yml --prune
+conda activate eccb-dgat-tutorial
+```
 
 Open the notebooks in order:
 
@@ -51,15 +58,15 @@ The default environment includes the packages needed for the tutorial notebooks.
 - 10 GB free disk space recommended for environments, downloaded data, and outputs.
 - No GPU is required because the live path loads precomputed DGAT predictions.
 
-Planning estimates for a typical 4-core/16-GB laptop are shown below. These are ranges, not guarantees; organizers should record measurements on the final released assets and a clean reference machine.
+The observed values below come from the 20 July 2026 clean-room run on an Apple-silicon Mac. Allow additional time on older systems and for first-time package/data downloads.
 
-| Step | Expected time | Notes |
-| --- | ---: | --- |
-| Create tutorial environment | 5–15 min | Mostly package download/solve time |
-| Download DGAT data | ~15 min on the review workstation | Allow 30–60+ min on conference Wi-Fi |
-| Notebook 1 | 3–8 min | Data loading and spatial exploration |
-| Notebook 2, precomputed predictions | 1–3 min | Alignment and plotting; no model fitting |
-| Notebook 3 | 2–5 min | Evaluation and spatial metrics |
+| Step | Observed / planning time | Observed peak memory | Notes |
+| --- | ---: | ---: | --- |
+| Create tutorial environment | Plan 5–15 min | — | Mostly package download/solve time |
+| Download Breast DGAT data (~270 MB) | Network-dependent | — | Run before the conference; interrupted transfers resume |
+| Notebook 1 | 14–39 sec | 2.0 GB | Data loading and spatial exploration |
+| Notebook 2, precomputed predictions | 7–9 sec | 1.0 GB | Alignment and plotting; no model fitting |
+| Notebook 3 | 8–12 sec | 0.9 GB | Evaluation and spatial metrics |
 
 Notebook 2 no longer writes full transcript and protein matrices to CSV; those redundant writes were a major avoidable source of memory pressure and disk activity.
 
@@ -110,10 +117,10 @@ The DGAT tutorial data and pretrained model weights are provided in separate Goo
 Download only the data needed by participants:
 
 ```bash
-bash scripts/download_dgat_assets.sh --data-only
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast
 ```
 
-Organizers preparing official predictions should download both data and checkpoints by omitting `--data-only`. The downloader skips complete existing folders, supports `--force`, reports elapsed time, and offers a no-download check:
+The participant shortcut downloads only the Breast RNA/ADT pair used by the notebooks. Organizers preparing other datasets or official predictions can download the full data folder and checkpoints by omitting `--data-only` and `--dataset`. The downloader resumes interrupted transfers, skips complete existing assets, supports `--force`, reports elapsed time, and offers a no-download check:
 
 ```bash
 bash scripts/download_dgat_assets.sh
@@ -159,7 +166,7 @@ For paired AnnData files, the expected structure is:
 - shared observation IDs between the RNA and ADT files;
 - spatial coordinates in the RNA file's `adata.obsm["spatial"]` or coordinate columns in `adata.obs`.
 
-Optional precomputed DGAT predictions can be supplied as `data/raw/dgat_predictions.csv` or generated into `data/processed/predicted_proteins.csv` for the evaluation notebook.
+The committed Breast prediction table is loaded from `data/raw/dgat_predictions.csv`. Organizers can regenerate it into `data/processed/predicted_proteins.csv` with the optional official workflow below.
 
 Large raw datasets, checkpoints, and generated files are intentionally ignored by Git. The GitHub repository documents the official download rather than committing DGAT assets directly.
 
@@ -211,7 +218,7 @@ First clone the official DGAT repository into `external/`:
 
 ```bash
 mkdir -p external
-git clone https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
+git clone --depth 1 https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
 ```
 
 Download both data and model weights, then run the preflight check:
@@ -267,7 +274,7 @@ cp data/processed/predicted_proteins.csv data/raw/dgat_predictions.csv
 cp data/processed/predicted_proteins.metadata.json data/raw/dgat_predictions.metadata.json
 ```
 
-The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It uses the downloaded RNA `.h5ad` file, resolves compatible feature lists, requires a checkpoint directory containing both expected weight files, handles DGAT's AnnData return value, and writes the prediction table plus a provenance sidecar.
+The wrapper calls DGAT's own `Model.Train_and_Predict.protein_predict(...)`. It uses the downloaded RNA `.h5ad` file, resolves compatible feature lists, requires both expected weight files, adapts the flat Google Drive checkpoint layout to DGAT's nested directory convention without duplicating files when hard links are supported, handles DGAT's AnnData return value, and writes the prediction table plus a provenance sidecar.
 
 ```text
 data/processed/predicted_proteins.csv
@@ -355,7 +362,7 @@ See `tutorial_checklist.md` for a review checklist aligned with the 1 July draft
 Minimum items to finalize before committee review:
 
 - Choose the exact official DGAT notebook or command to demonstrate live.
-- Generate a real `data/raw/dgat_predictions.csv` from the tutorial dataset, retain its provenance sidecar, and distribute both before the session.
+- Regenerate and verify `data/raw/dgat_predictions.csv` only when the selected data, upstream DGAT commit, or checkpoints change.
 - Confirm the official DGAT checkpoint and data download works on a clean machine.
 - Confirm the notebooks can read the downloaded DGAT `.h5ad` file directly.
 - Replace the planning runtime ranges with measurements from the final assets and reference machine.

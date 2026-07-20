@@ -1,6 +1,6 @@
 # ECCB DGAT Tutorial: complete setup before the session
 
-Please complete these steps at least 24 hours before the tutorial. The DGAT data download took about 15 minutes on one review workstation and may take substantially longer on conference Wi-Fi.
+Please complete these steps at least 24 hours before the tutorial. The participant command downloads only the roughly 270 MB Breast dataset, but unstable conference Wi-Fi can still interrupt large-file transfers.
 
 ## Recommended computer
 
@@ -16,26 +16,30 @@ git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
 cd ECCB-2026-Tutorial
 conda env create -f environment.yml
 conda activate eccb-dgat-tutorial
-bash scripts/download_dgat_assets.sh --data-only
-bash scripts/download_dgat_assets.sh --data-only --check-only
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only
 jupyter lab
 ```
 
-Download the organizer-provided prediction table and provenance sidecar and place them at:
+The repository clone already contains both verified Breast prediction files. Confirm that they are present:
 
 ```text
 data/raw/dgat_predictions.csv
 data/raw/dgat_predictions.metadata.json
 ```
 
+Do not replace them with locally fitted baseline outputs.
+
 Open the three notebooks and confirm that the kernel named **ECCB DGAT Tutorial** is available. Notebook 2 should report that it loaded precomputed DGAT predictions.
 
 ## Expected timing
 
 - Environment creation: 5–15 minutes
-- Data download: about 15 minutes on the review workstation; allow 30–60+ minutes on conference Wi-Fi
-- Notebook 1: 3–8 minutes
-- Notebook 2 with precomputed predictions: 1–3 minutes
-- Notebook 3: 2–5 minutes
+- Breast data download: about 270 MB; complete it before traveling and re-run the same command if the connection is interrupted
+- Notebook 1: 14–39 seconds observed; allow up to a few minutes on older laptops
+- Notebook 2 with precomputed predictions: 7–9 seconds observed
+- Notebook 3: 8–12 seconds observed
+
+Peak memory observed during the clean-room run was approximately 2.0 GB. The 8 GB minimum leaves room for Jupyter, the browser, Conda, and operating-system overhead; 16 GB remains recommended.
 
 If setup fails, send the organizers your operating system, available RAM, the command that failed, and the complete error message before the tutorial.

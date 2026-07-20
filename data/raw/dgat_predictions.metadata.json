@@ -1,0 +1,12 @@
+{
+  "method": "official_dgat",
+  "source": "external/DGAT_assets/data/Breast_RNA.h5ad",
+  "evaluation_note": "Official pretrained DGAT inference.",
+  "rows": 4169,
+  "proteins": 31,
+  "dataset": "Breast",
+  "dgat_commit": "b0128f342de70fa04546d27f9967eab1821f0933",
+  "prediction_sha256": "d28edda9f85bcf851d475d1b903de32fec925c05d798fecb585e723312c683b7",
+  "encoder_mrna_sha256": "ce23a47cd34fd5508402d6d0af919c96b39065ace1bb8042c59a4b15b679f4de",
+  "decoder_protein_sha256": "56c1a79e2feb72164917668bc39f6a3e4380d65d9edf481195a51544669f6ea8"
+}

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -171,6 +173,12 @@ def run_official_dgat_prediction(
     )
     common_gene = read_feature_list(common_gene_path)
     common_protein = read_feature_list(common_protein_path)
+    model_save_dir = prepare_dgat_model_layout(
+        model_save_dir,
+        gene_count=len(common_gene),
+        protein_count=len(common_protein),
+        adapter_root=pyg_data_dir / "checkpoint_layout",
+    )
 
     try:
         import anndata as ad
@@ -221,6 +229,49 @@ def run_official_dgat_prediction(
     return pd.DataFrame(matrix, index=index, columns=columns)
 
 
+def prepare_dgat_model_layout(
+    model_save_dir: str | Path,
+    *,
+    gene_count: int,
+    protein_count: int,
+    adapter_root: str | Path,
+) -> Path:
+    """Provide the nested checkpoint layout required by DGAT ``protein_predict``.
+
+    Google Drive currently supplies flat checkpoint files, while upstream DGAT
+    looks below ``<genes>_gene_<proteins>_protein``. Hard links avoid duplicating
+    the large encoder; copying is a portable fallback when links are unavailable.
+    """
+
+    model_save_dir = Path(model_save_dir)
+    checkpoint_name = f"{gene_count}_gene_{protein_count}_protein"
+    nested_dir = model_save_dir / checkpoint_name
+    required_files = ("encoder_mRNA.pth", "decoder_protein.pth")
+    if all((nested_dir / filename).is_file() for filename in required_files):
+        return model_save_dir
+
+    if not all((model_save_dir / filename).is_file() for filename in required_files):
+        raise FileNotFoundError(
+            f"DGAT checkpoints are incomplete under {model_save_dir}; expected both "
+            "encoder_mRNA.pth and decoder_protein.pth."
+        )
+
+    adapter_root = Path(adapter_root)
+    adapter_dir = adapter_root / checkpoint_name
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    for filename in required_files:
+        source = model_save_dir / filename
+        destination = adapter_dir / filename
+        if destination.exists():
+            continue
+        try:
+            os.link(source, destination)
+        except OSError:
+            shutil.copy2(source, destination)
+    print(f"Using DGAT checkpoint compatibility layout: {adapter_dir}")
+    return adapter_root
+
+
 def read_feature_list(path: str | Path) -> list[str]:
     """Read one feature name per line."""
 
@@ -242,6 +293,10 @@ def resolve_dgat_resource_files(
         return Path(common_gene_path), Path(common_protein_path)
 
     gene_count, protein_count = infer_feature_counts_from_model_dir(model_save_dir)
+    if gene_count is None or protein_count is None:
+        checkpoint_counts = infer_feature_counts_from_flat_checkpoints(model_save_dir)
+        if checkpoint_counts is not None:
+            gene_count, protein_count = checkpoint_counts
     search_dirs = [
         dgat_repo_dir / "resources",
         dgat_repo_dir,
@@ -262,6 +317,36 @@ def resolve_dgat_resource_files(
     if resolved_protein is None:
         raise FileNotFoundError("Could not find `common_protein_*.txt`. Pass `--common-protein` explicitly.")
     return resolved_gene, resolved_protein
+
+
+def infer_feature_counts_from_flat_checkpoints(model_save_dir: str | Path) -> tuple[int, int] | None:
+    """Infer gene/protein counts from the flat public DGAT checkpoints."""
+
+    model_save_dir = Path(model_save_dir)
+    encoder_path = model_save_dir / "encoder_mRNA.pth"
+    decoder_path = model_save_dir / "decoder_protein.pth"
+    if not encoder_path.is_file() or not decoder_path.is_file():
+        return None
+    try:
+        import torch
+    except ImportError as exc:
+        raise ImportError("Inspecting flat DGAT checkpoints requires PyTorch in the official environment.") from exc
+
+    encoder_state = torch.load(encoder_path, map_location="cpu")
+    input_weight = encoder_state.get("conv1.lin.weight")
+    if input_weight is None or input_weight.ndim != 2:
+        raise ValueError(f"Could not infer the DGAT gene count from {encoder_path}.")
+    gene_count = int(input_weight.shape[1])
+
+    decoder_state = torch.load(decoder_path, map_location="cpu")
+    protein_names = {
+        key.split(".")[1]
+        for key in decoder_state
+        if key.startswith("protein_branches.") and len(key.split(".")) > 2
+    }
+    if not protein_names:
+        raise ValueError(f"Could not infer the DGAT protein count from {decoder_path}.")
+    return gene_count, len(protein_names)
 
 
 def infer_feature_counts_from_model_dir(model_save_dir: str | Path) -> tuple[int | None, int | None]:

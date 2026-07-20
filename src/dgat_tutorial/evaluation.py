@@ -9,6 +9,13 @@ def protein_correlations(observed: pd.DataFrame, predicted: pd.DataFrame) -> pd.
 
     common_spots = observed.index.intersection(predicted.index)
     common_proteins = observed.columns.intersection(predicted.columns)
+    if common_spots.empty:
+        raise ValueError("Observed and predicted protein tables have no shared spot/cell IDs.")
+    if common_proteins.empty:
+        raise ValueError(
+            "Observed and predicted protein tables have no shared protein names. "
+            "Confirm that ADT labels were normalized to the DGAT decoder gene-symbol convention."
+        )
     rows = []
     for protein in common_proteins:
         y_true = observed.loc[common_spots, protein]

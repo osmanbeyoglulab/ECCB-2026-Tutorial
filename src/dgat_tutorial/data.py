@@ -204,7 +204,7 @@ def load_paired_h5ad_dataset(transcript_path: str | Path, protein_path: str | Pa
 
     spots = _spots_from_anndata(transcript_adata, transcript_path)
     transcripts = _matrix_to_dataframe(transcript_adata)
-    proteins = _matrix_to_dataframe(protein_adata)
+    proteins = canonicalize_protein_columns(_matrix_to_dataframe(protein_adata))
 
     common = spots.index.intersection(transcripts.index).intersection(proteins.index)
     if common.empty:
@@ -263,6 +263,7 @@ def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
         protein_matrix = protein_matrix.toarray() if hasattr(protein_matrix, "toarray") else np.asarray(protein_matrix)
         protein_names = _protein_names_from_anndata(adata, protein_key, protein_matrix.shape[1])
         proteins = pd.DataFrame(protein_matrix, index=adata.obs_names, columns=protein_names)
+    proteins = canonicalize_protein_columns(proteins)
 
     return SpatialOmicsData(spots=spots, transcripts=transcripts, proteins=proteins)
 
@@ -281,6 +282,26 @@ def _protein_names_from_anndata(adata, protein_key: str, n_proteins: int) -> lis
             if len(names) == n_proteins:
                 return [str(name) for name in names]
     return [f"protein_{i + 1}" for i in range(n_proteins)]
+
+
+def canonicalize_protein_columns(proteins: pd.DataFrame) -> pd.DataFrame:
+    """Align DGAT ADT labels with the gene-symbol names used by the decoder."""
+
+    renamed: dict[object, str] = {}
+    for column in proteins.columns:
+        name = str(column)
+        if name in {"PTPRC-1", "PTPRC-2"}:
+            canonical = name.replace("-", "_")
+        elif name.endswith("-1"):
+            canonical = name[:-2]
+        else:
+            canonical = name.replace("-", "_")
+        renamed[column] = canonical
+
+    canonical_names = list(renamed.values())
+    if len(canonical_names) != len(set(canonical_names)):
+        raise ValueError("Protein-name normalization produced duplicate columns; inspect the ADT feature labels.")
+    return proteins.rename(columns=renamed)
 
 
 def load_csv_dataset(data_dir: str | Path) -> SpatialOmicsData:
