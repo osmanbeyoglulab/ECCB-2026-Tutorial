@@ -13,23 +13,28 @@ __pycache__/
 .DS_Store
 
 # Data and generated outputs
-external/
-data/raw/*
-!data/raw/.gitkeep
-!data/raw/dgat_predictions.csv
-!data/raw/dgat_predictions.metadata.json
-data/processed/*
-!data/processed/.gitkeep
-results/*
-!results/.gitkeep
-!results/figures/
-results/figures/*
-!results/figures/.gitkeep
+hands-on_tutorial/external/
+hands-on_tutorial/data/raw/*
+!hands-on_tutorial/data/raw/.gitkeep
+!hands-on_tutorial/data/raw/dgat_predictions.csv
+!hands-on_tutorial/data/raw/dgat_predictions.metadata.json
+hands-on_tutorial/data/processed/*
+!hands-on_tutorial/data/processed/.gitkeep
+hands-on_tutorial/results/*
+!hands-on_tutorial/results/.gitkeep
+!hands-on_tutorial/results/figures/
+hands-on_tutorial/results/figures/*
+!hands-on_tutorial/results/figures/.gitkeep
+hands-on_tutorial/checkpoints/session_*/*
+!hands-on_tutorial/checkpoints/session_*/.gitkeep
 
 # Large model files
-models/
+hands-on_tutorial/models/
 *.pt
 *.pth
 *.ckpt
 *.h5ad
 *.h5
+
+# Office temporary files
+~$*
