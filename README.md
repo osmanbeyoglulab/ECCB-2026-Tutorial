@@ -1,4 +1,4 @@
-# ECCB 2026 Tutorial: Spatial Protein Inference with DGAT
+# ECCB 2026 Tutorial: Computational inference of spatial protein landscapes: methods, assumptions and pitfalls
 
 Presentation and hands-on materials for the ECCB tutorial on preparing spatial omics data, running DGAT protein-inference workflows, and evaluating inferred spatial protein landscapes.
 
