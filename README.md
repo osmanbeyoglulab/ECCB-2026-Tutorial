@@ -2,7 +2,6 @@
 
 Presentation and hands-on materials for the ECCB tutorial on preparing spatial omics data, running DGAT protein-inference workflows, and evaluating inferred spatial protein landscapes.
 
-The repository follows the presentation-first organization of the [ECCB 2024 tutorial repository](https://github.com/osmanbeyoglulab/ECCB-2024-Tutorial): the overview material is separate from a self-contained hands-on tutorial.
 
 ## Table of contents
 
@@ -37,13 +36,6 @@ The repository follows the presentation-first organization of the [ECCB 2024 tut
 - [Download the PowerPoint presentation](overview/eccb_2026_dgat_tutorial_slides.pptx)
 - [View or download the presentation PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026.pdf)
 
-## Start here
-
-- Presenters: open the [PowerPoint deck](overview/eccb_2026_dgat_tutorial_slides.pptx), the [PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026.pdf), or the [`overview/` guide](overview/README.md).
-- Participants: complete [`hands-on_tutorial/PARTICIPANT_SETUP.md`](hands-on_tutorial/PARTICIPANT_SETUP.md) before the tutorial.
-- Instructors: use the run order and checkpoint map in [`hands-on_tutorial/README.md`](hands-on_tutorial/README.md).
-
-Official DGAT repository: <https://github.com/osmanbeyoglulab/DGAT>
 
 ## Tutorial schedule
 
