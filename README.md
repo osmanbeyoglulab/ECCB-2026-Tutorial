@@ -1,10 +1,7 @@
 # ECCB 2026 Tutorial: Computational inference of spatial protein landscapes: methods, assumptions and pitfalls
 
 This repository contains the lecture slides and hands-on materials for the ECCB 2026 tutorial on computational inference of spatial protein landscapes. The tutorial introduces spatial transcriptomics, spatial proteomics, and multimodal technologies; examines why spatial context matters for transcript-to-protein prediction; and presents the assumptions, evaluation strategies, and common pitfalls associated with computational protein inference. Participants will apply these concepts through a DGAT-based workflow using Python and Jupyter notebooks.
-
-# Learning objectives
-
-- By the end of the tutorial, participants will be able to:
+By the end of the tutorial, participants will be able to:
 - Explain why protein abundance cannot always be inferred directly from RNA expression.
 - Describe major spatial transcriptomics, spatial proteomics, and multimodal technologies.
 - Understand how tissue architecture and spatial neighborhoods inform protein prediction.
