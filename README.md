@@ -1,7 +1,18 @@
 # ECCB 2026 Tutorial: Computational inference of spatial protein landscapes: methods, assumptions and pitfalls
 
-Presentation and hands-on materials for the ECCB tutorial on preparing spatial omics data, running DGAT protein-inference workflows, and evaluating inferred spatial protein landscapes.
+This repository contains the lecture slides and hands-on materials for the ECCB 2026 tutorial on computational inference of spatial protein landscapes. The tutorial introduces spatial transcriptomics, spatial proteomics, and multimodal technologies; examines why spatial context matters for transcript-to-protein prediction; and presents the assumptions, evaluation strategies, and common pitfalls associated with computational protein inference. Participants will apply these concepts through a DGAT-based workflow using Python and Jupyter notebooks.
 
+# Learning objectives
+
+- By the end of the tutorial, participants will be able to:
+- Explain why protein abundance cannot always be inferred directly from RNA expression.
+- Describe major spatial transcriptomics, spatial proteomics, and multimodal technologies.
+- Understand how tissue architecture and spatial neighborhoods inform protein prediction.
+- Compare spatial and non-spatial protein-inference approaches.
+- Explain the molecular and spatial graph components of DGAT.
+- Run a pretrained DGAT model on spatial transcriptomics data.
+- Evaluate predictions using correlation, spatial coherence, and biological validation.
+- Recognize dataset shift, batch effects, missing cell types, overinterpretation, and other common failure modes.
 
 ## Table of contents
 
@@ -41,8 +52,14 @@ Presentation and hands-on materials for the ECCB tutorial on preparing spatial o
 
 | Time | Session | Topic |
 | --- | --- | --- |
+| 09:00–09:15 | Motivation and challenges in spatial protein inference |
+| 09:15–10:00 | Spatial omics technologies |
+| 10:00–10:30 | Computational protein inference and DGAT |
+| 10:30–10:45 | Coffee break |
 | 10:45–11:05 | Hands-on Session 1 | Environment and spatial exploration |
 | 11:05–11:35 | Hands-on Session 2 | DGAT protein-inference workflow |
 | 11:35–12:00 | Hands-on Session 3 | Evaluation and interpretation |
+| 12:00–12:20 | Best practices and future directions |
+| 12:20–12:45 | Discussion and wrap-up |
 
 Each session is divided into three independently runnable parts. Every part reloads its required inputs and writes a small JSON completion manifest under `hands-on_tutorial/checkpoints/`, making the part boundaries usable as live-session checkpoints and restart points.
