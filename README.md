@@ -59,4 +59,6 @@ By the end of the tutorial, participants will be able to:
 | 12:00–12:20 | Best practices and future directions |
 | 12:20–12:45 | Discussion and wrap-up |
 
+## References
+
 Each session is divided into three independently runnable parts. Every part reloads its required inputs and writes a small JSON completion manifest under `hands-on_tutorial/checkpoints/`, making the part boundaries usable as live-session checkpoints and restart points.
