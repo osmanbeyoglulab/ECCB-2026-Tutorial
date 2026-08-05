@@ -23,7 +23,7 @@ def run_demo_dgat_inference(
 
     This is deliberately not called DGAT. Every row is predicted by a model that
     was fitted without that row, avoiding the in-sample leakage present in the
-    original tutorial fallback. It remains a baseline for environment checks;
+    earlier diagnostic path. It remains a baseline for environment checks;
     use official or precomputed DGAT predictions for the tutorial results.
     """
 

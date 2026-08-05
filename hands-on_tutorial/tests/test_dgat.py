@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from dgat_tutorial.data import canonicalize_protein_columns
+from dgat_tutorial.data import canonicalize_protein_columns, find_dgat_h5ad_pair, load_tutorial_data
 from dgat_tutorial.checkpoints import find_tutorial_root, preferred_prediction_path, write_checkpoint
 from dgat_tutorial.dgat import (
     discover_dgat_model_dir,
@@ -16,6 +16,13 @@ from dgat_tutorial.dgat import (
     run_demo_dgat_inference,
     write_prediction_artifact,
 )
+from dgat_tutorial.processing import (
+    calculate_qc_metrics,
+    clr_normalize,
+    knn_edge_index,
+    normalize_total_log1p,
+)
+from dgat_tutorial.teaching import official_dgat_loss_table, weighted_training_objective
 
 
 class DgatTutorialTests(unittest.TestCase):
@@ -55,6 +62,24 @@ class DgatTutorialTests(unittest.TestCase):
         )
         normalized = canonicalize_protein_columns(proteins)
         self.assertEqual(list(normalized.columns), ["CD163", "HLA_DRA", "PTPRC_1", "PTPRC_2"])
+
+    def test_missing_breast_data_stops_instead_of_generating_data(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(FileNotFoundError, "paired Breast RNA/ADT"):
+                load_tutorial_data(tmp)
+
+    def test_tutorial_pair_discovery_selects_breast_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "Skin_RNA.h5ad").touch()
+            (root / "Skin_ADT.h5ad").touch()
+            self.assertIsNone(find_dgat_h5ad_pair(root))
+
+            breast_rna = root / "Breast_RNA.h5ad"
+            breast_adt = root / "Breast_ADT.h5ad"
+            breast_rna.touch()
+            breast_adt.touch()
+            self.assertEqual(find_dgat_h5ad_pair(root), (breast_rna, breast_adt))
 
     def test_baseline_returns_out_of_fold_predictions(self) -> None:
         rng = np.random.default_rng(4)
@@ -114,6 +139,33 @@ class DgatTutorialTests(unittest.TestCase):
             self.assertEqual((nested / "encoder_mRNA.pth").read_bytes(), b"encoder")
             self.assertEqual((nested / "decoder_protein.pth").read_bytes(), b"decoder")
             self.assertTrue((root / "encoder_mRNA.pth").exists())
+
+    def test_processing_preserves_labels_and_normalizes_rna_depth(self) -> None:
+        matrix = pd.DataFrame([[1.0, 3.0], [2.0, 8.0]], index=["a", "b"], columns=["g1", "g2"])
+        normalized = normalize_total_log1p(matrix, target_sum=100.0)
+        recovered_depth = np.expm1(normalized).sum(axis=1)
+        np.testing.assert_allclose(recovered_depth, [100.0, 100.0])
+        self.assertTrue(normalized.index.equals(matrix.index))
+        self.assertTrue(normalized.columns.equals(matrix.columns))
+
+    def test_protein_clr_is_centered_per_spot(self) -> None:
+        proteins = pd.DataFrame([[0.0, 1.0, 3.0], [2.0, 2.0, 2.0]])
+        normalized = clr_normalize(proteins)
+        np.testing.assert_allclose(normalized.mean(axis=1), [0.0, 0.0], atol=1e-12)
+
+    def test_qc_and_graph_outputs_have_teaching_shapes(self) -> None:
+        transcripts = pd.DataFrame([[1.0, 0.0], [2.0, 1.0], [0.0, 2.0]])
+        proteins = pd.DataFrame([[1.0], [0.0], [3.0]])
+        qc = calculate_qc_metrics(transcripts, proteins)
+        self.assertEqual(list(qc.columns), ["rna_total", "genes_detected", "protein_total", "proteins_detected"])
+        coordinates = pd.DataFrame({"x": [0.0, 1.0, 0.0], "y": [0.0, 0.0, 1.0]})
+        edge_index = knn_edge_index(coordinates, n_neighbors=2)
+        self.assertEqual(edge_index.shape, (2, 6))
+
+    def test_five_term_training_objective_is_explicit(self) -> None:
+        self.assertEqual(len(official_dgat_loss_table()), 5)
+        total = weighted_training_objective(1, 2, 3, 4, 5, weights=(1, 1, 1, 2, 0))
+        self.assertEqual(total, 14.0)
 
 
 if __name__ == "__main__":

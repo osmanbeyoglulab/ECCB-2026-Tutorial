@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
+from dgat_tutorial.data import find_dgat_h5ad_pair, load_tutorial_data
 from dgat_tutorial.dgat import (
     load_prediction_table,
     load_prediction_metadata,
@@ -33,7 +33,6 @@ def main() -> None:
     parser.add_argument("--pyg-data-dir", type=Path, default=Path("data/processed/dgat_pyg"))
     parser.add_argument("--common-gene", type=Path, default=None)
     parser.add_argument("--common-protein", type=Path, default=None)
-    parser.add_argument("--allow-demo", action="store_true", help="Use synthetic fallback data if no DGAT .h5ad is found.")
     args = parser.parse_args()
 
     args.processed_dir.mkdir(parents=True, exist_ok=True)
@@ -41,12 +40,8 @@ def main() -> None:
     fig_dir.mkdir(parents=True, exist_ok=True)
 
     dgat_h5ad_pair = find_dgat_h5ad_pair(args.data_dir)
-    dgat_h5ad = find_dgat_h5ad(args.data_dir)
-    dataset = load_tutorial_data(args.data_dir, allow_demo=args.allow_demo)
-    if dgat_h5ad_pair:
-        print(f"Loaded DGAT AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
-    else:
-        print(f"Loaded DGAT AnnData file: {dgat_h5ad}" if dgat_h5ad else "Loaded synthetic fallback data")
+    dataset = load_tutorial_data(args.data_dir)
+    print(f"Loaded Breast AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
 
     spots = dataset.spots
     transcripts = dataset.transcripts
@@ -61,9 +56,7 @@ def main() -> None:
         parser.error("Choose only one of --run-official-dgat and --demo-baseline.")
 
     if args.run_official_dgat:
-        rna_h5ad = dgat_h5ad_pair[0] if dgat_h5ad_pair else dgat_h5ad
-        if rna_h5ad is None:
-            raise FileNotFoundError("Could not find RNA .h5ad for official DGAT prediction.")
+        rna_h5ad = dgat_h5ad_pair[0]
         predicted_proteins = run_official_dgat_prediction(
             rna_h5ad_path=rna_h5ad,
             dgat_repo_dir=args.dgat_repo,

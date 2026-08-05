@@ -14,7 +14,7 @@ Use this checklist before uploading the draft repository for ECCB committee revi
 - [ ] Official DGAT `.h5ad` prediction data loads directly in the tutorial notebooks.
 - [x] Precomputed official predictions are available as `data/raw/dgat_predictions.csv`.
 - [x] Precomputed predictions include DGAT/checkpoint provenance and were not fitted on the evaluation proteins.
-- [ ] `PARTICIPANT_SETUP.md` is sent at least one week in advance with a 24-hour setup deadline.
+- [ ] The instructor-led Session 0 setup worksheet has been timed on the tutorial network and reference laptops.
 - [x] Expected runtime and peak memory are measured on the final assets and a clean reference machine.
 - [ ] Common failure modes are documented in notebook markdown cells.
 
@@ -29,7 +29,9 @@ Use this checklist before uploading the draft repository for ECCB committee revi
 - [ ] Generated files are written under `results/` or `data/processed/`.
 - [ ] Large generated files are ignored by `.gitignore`.
 - [ ] No private paths, credentials, or unpublished data are committed.
-- [x] Session 2, Part 2 loads precomputed official DGAT predictions and never substitutes the ridge baseline.
+- [x] Session 2, Part 2 explains and optionally instantiates all four official DGAT modules.
+- [x] Session 2, Part 3 exposes the five-term objective, optimization step, validation, and checkpoint workflow.
+- [x] Session 2, Part 4 loads precomputed official DGAT predictions and never substitutes the ridge baseline.
 - [x] Session 3, Part 1 prints the prediction method and evaluation caveat before metrics.
 
 ## Review Package

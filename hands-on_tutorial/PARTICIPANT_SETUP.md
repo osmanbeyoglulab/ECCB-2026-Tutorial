@@ -1,47 +1,96 @@
-# ECCB DGAT Tutorial: complete setup before the session
+# Session 0: live environment and data setup
 
-Please complete these steps at least 24 hours before the tutorial. The participant command downloads only the roughly 270 MB Breast dataset, but unstable conference Wi-Fi can still interrupt large-file transfers.
+Complete this worksheet **during the tutorial with the instructor**. Environment creation, data download,
+validation, and the first notebook are teaching activities—not prerequisites.
 
-## Recommended computer
+## What participants need when they arrive
 
-- 4 CPU cores, 16 GB RAM, and 10 GB free disk space
+- A laptop with 4 CPU cores, 16 GB RAM recommended, and 10 GB free disk space
 - macOS, Linux, or Windows with WSL2
-- Conda or Mamba and a current web browser
-- No GPU is required for the participant workflow
+- Conda or Mamba installed
+- Git and a current web browser
+- Network access for cloning the repository, creating the environment, and downloading about 270 MB
 
-## Setup
+No GPU and no pre-created Python environment are required.
+
+## Step 1 — Clone the tutorial repository
+
+The instructor first explains the repository layout and then everyone runs:
 
 ```bash
 git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
 cd ECCB-2026-Tutorial/hands-on_tutorial
-conda env create -f environment.yml
-conda activate eccb-dgat-tutorial
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only
-jupyter lab
 ```
 
-The repository clone already contains both verified Breast prediction files. Confirm that they are present:
+Checkpoint: `pwd` should end in `hands-on_tutorial` and `ls` should show `environment.yml`, `notebooks/`,
+`scripts/`, and `src/`.
+
+## Step 2 — Create the participant environment
+
+The instructor explains why the lightweight participant environment is separate from the optional full DGAT
+training environment.
+
+```bash
+conda env create -f environment.yml
+conda activate eccb-dgat-tutorial
+python --version
+```
+
+Checkpoint: Python should be 3.10 and the shell prompt should show `eccb-dgat-tutorial`.
+
+If the environment already exists, update it during the same session:
+
+```bash
+conda env update -n eccb-dgat-tutorial -f environment.yml --prune
+conda activate eccb-dgat-tutorial
+```
+
+## Step 3 — Download and verify the Breast dataset
+
+The data download is part of the data-provenance lesson. The instructor explains which files are measurements,
+which predictions are committed, and why observed proteins must not be used as model inputs during evaluation.
+
+```bash
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast
+bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only
+```
+
+The repository already contains the verified prediction artifact and its metadata sidecar:
 
 ```text
 data/raw/dgat_predictions.csv
 data/raw/dgat_predictions.metadata.json
 ```
 
-Do not replace them with locally fitted baseline outputs.
+Checkpoint: the asset check passes and both prediction files exist. Do not replace them with locally fitted
+baseline outputs.
 
-Open `notebooks/` and confirm that the kernel named **ECCB DGAT Tutorial** is available. There are three session folders with three short parts each. Every part is independently runnable and records a completion manifest under `checkpoints/`.
+## Step 4 — Launch Jupyter and select the tutorial kernel
 
-As a preflight, run Session 1, Part 1 (`notebooks/session_01/01_load_and_validate.ipynb`) and Session 2, Part 2 (`notebooks/session_02/02_load_predictions.ipynb`). The second notebook should report that it loaded verified official DGAT predictions.
+```bash
+jupyter lab
+```
 
-## Expected timing
+Open `notebooks/session_01/01_load_and_validate.ipynb` and select **ECCB DGAT Tutorial**. Run the notebook with
+the instructor. It should report the paired Breast data source, spatial coordinates, and passing validation checks.
 
+## Step 5 — Confirm the inference artifact
+
+Open `notebooks/session_02/04_load_predictions.ipynb`. It should print the DGAT method and evaluation caveat,
+then write a processed prediction table with its provenance sidecar.
+
+## Live-session timing budget
+
+- Repository clone and orientation: 3–5 minutes
 - Environment creation: 5–15 minutes
-- Breast data download: about 270 MB; complete it before traveling and re-run the same command if the connection is interrupted
-- Session 1 (all three parts): 14–39 seconds observed; allow up to a few minutes on older laptops
-- Session 2 (all three parts, precomputed predictions): 7–9 seconds observed
-- Session 3 (all three parts): 8–12 seconds observed
+- Breast data download and asset verification: 3–10 minutes, depending on the tutorial network
+- Jupyter launch, kernel selection, and first validation notebook: 5 minutes
 
-Peak memory observed during the clean-room run was approximately 2.0 GB. The 8 GB minimum leaves room for Jupyter, the browser, Conda, and operating-system overhead; 16 GB remains recommended.
+The instructor should have a local mirror of the repository, Conda packages, and Breast data available if the
+venue network is unreliable. That contingency is organizer infrastructure; participants still perform and learn
+the setup workflow during the session.
 
-If setup fails, send the organizers your operating system, available RAM, the command that failed, and the complete error message before the tutorial.
+## Troubleshooting during the session
+
+If a command fails, stop at that checkpoint and share the operating system, command, and complete error with an
+instructor. Do not silently switch environments or substitute another dataset for the official Breast workflow.

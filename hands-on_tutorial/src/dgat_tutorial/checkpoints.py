@@ -94,5 +94,5 @@ def preferred_prediction_path(paths: TutorialPaths) -> Path:
     if committed.is_file():
         return committed
     raise FileNotFoundError(
-        "No prediction table found. Restore data/raw/dgat_predictions.csv or run Session 2, Part 2."
+        "No prediction table found. Restore data/raw/dgat_predictions.csv or run Session 2, Part 4."
     )

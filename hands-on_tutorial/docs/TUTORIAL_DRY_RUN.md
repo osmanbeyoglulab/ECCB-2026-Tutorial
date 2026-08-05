@@ -60,3 +60,11 @@ No additional repository defect was found in the final remote-clone participant 
 - Executed Parts 1.1, 1.2, 1.3, and 2.2 in the `eccb-dgat-tutorial` Conda environment. Each part produced its declared artifacts and a JSON completion manifest.
 - Ran all eight unit tests, including tutorial-root discovery, prediction fallback, and checkpoint-manifest tests.
 - Parts 2.1, 2.3, 3.1, 3.2, and 3.3 intentionally require the matching official Breast `.h5ad` assets. They were not re-executed during this layout-only validation because those large local assets were not present. Their code cells passed syntax validation, and the underlying full-session workflow is covered by the clean-room results above.
+
+## Expanded teaching-flow revision: 30 July 2026
+
+- Session 1 now teaches object validation, modality-specific QC, explicit filtering, RNA library-size/log normalization, protein CLR normalization, spatial graph construction, feature maps, and exploratory embeddings.
+- Session 2 now contains five parts: graph inputs, four-module DGAT construction, five-loss training workflow, pretrained inference/provenance, and predicted-protein visualization.
+- The previous partial execution record is superseded. All data-processing and model-teaching parts now require the official paired Breast assets; a fresh full run with those files is required before workshop release. Part 2.4 separately validated the committed official prediction artifact.
+- Validated all 11 notebook documents with `nbformat` and parsed every Python code cell. All 12 focused unit tests passed.
+- The historical timing measurements above predate this expansion and must not be presented as timings for the revised notebooks. A fresh official-environment execution is required before the final workshop release.

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from dgat_tutorial.data import find_dgat_h5ad, find_dgat_h5ad_pair, load_tutorial_data
+from dgat_tutorial.data import find_dgat_h5ad_pair, load_tutorial_data
 from dgat_tutorial.dgat import load_prediction_metadata, run_demo_dgat_inference, write_prediction_artifact
 from dgat_tutorial.evaluation import morans_i, protein_correlations
 from dgat_tutorial.plotting import plot_correlation_bar, plot_spatial_feature
@@ -18,7 +18,6 @@ def main() -> None:
     parser.add_argument("--data-dir", type=Path, default=Path("data/raw"))
     parser.add_argument("--processed-dir", type=Path, default=Path("data/processed"))
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
-    parser.add_argument("--allow-demo", action="store_true", help="Use synthetic fallback data if no DGAT .h5ad is found.")
     parser.add_argument(
         "--demo-baseline",
         action="store_true",
@@ -31,12 +30,8 @@ def main() -> None:
     fig_dir.mkdir(parents=True, exist_ok=True)
 
     dgat_h5ad_pair = find_dgat_h5ad_pair(args.data_dir)
-    dgat_h5ad = find_dgat_h5ad(args.data_dir)
-    dataset = load_tutorial_data(args.data_dir, allow_demo=args.allow_demo)
-    if dgat_h5ad_pair:
-        print(f"Loaded DGAT AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
-    else:
-        print(f"Loaded DGAT AnnData file: {dgat_h5ad}" if dgat_h5ad else "Loaded synthetic fallback data")
+    dataset = load_tutorial_data(args.data_dir)
+    print(f"Loaded Breast AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
 
     spots = dataset.spots
     transcripts = dataset.transcripts
