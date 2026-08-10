@@ -41,6 +41,122 @@ from dgat_tutorial.checkpoints import tutorial_paths, write_checkpoint
 paths = tutorial_paths(tutorial_root)
 print(f"Tutorial root: {paths.root}")"""
 
+COLAB_BOOTSTRAP_TEMPLATE = """from pathlib import Path
+import importlib
+import importlib.util
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+SESSION_REQUIREMENTS = __SESSION_REQUIREMENTS__
+NEED_DGAT = __NEED_DGAT__
+
+in_colab = importlib.util.find_spec("google.colab") is not None and Path("/content").is_dir()
+if in_colab:
+    from google.colab import drive
+
+    drive.mount("/content/drive", force_remount=False)
+    repo_dir = Path("/content/ECCB-2026-Tutorial")
+    tutorial_root = repo_dir / "hands-on_tutorial"
+    if not (tutorial_root / "src" / "dgat_tutorial").is_dir():
+        subprocess.run(
+            ["git", "clone", "--depth", "1",
+             "https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git", str(repo_dir)],
+            check=True,
+        )
+
+    drive_root = Path("/content/drive/MyDrive/ECCB2026")
+    drive_data = drive_root / "assets" / "DGAT_assets" / "data"
+    manifest_path = drive_root / "asset_manifest.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Missing {manifest_path}. Run Session 0 before the tutorial.")
+    asset_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    local_data = tutorial_root / "external" / "DGAT_assets" / "data"
+    local_data.mkdir(parents=True, exist_ok=True)
+    for filename in ("Tonsil_RNA.h5ad", "Tonsil_ADT.h5ad"):
+        source = drive_data / filename
+        destination = local_data / filename
+        if not source.is_file() or source.stat().st_size == 0:
+            raise FileNotFoundError(
+                f"Missing {source}. Run Session 0 Drive preparation before the tutorial."
+            )
+        expected_bytes = asset_manifest["files"][filename]["bytes"]
+        if source.stat().st_size != expected_bytes:
+            raise IOError(
+                f"Drive asset size mismatch for {filename}: expected {expected_bytes}, "
+                f"found {source.stat().st_size}. Rerun Session 0."
+            )
+        if not destination.is_file() or destination.stat().st_size != source.stat().st_size:
+            print(f"Copying {filename} from Drive to the Colab VM ...")
+            shutil.copy2(source, destination)
+
+    os.environ["DGAT_TUTORIAL_STATE_DIR"] = str(drive_root / "state")
+
+    if NEED_DGAT:
+        dgat_dir = tutorial_root / "external" / "DGAT"
+        if not (dgat_dir / "utils" / "Preprocessing.py").is_file():
+            dgat_dir.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(
+                ["git", "clone", "--depth", "1",
+                 "https://github.com/osmanbeyoglulab/DGAT.git", str(dgat_dir)],
+                check=True,
+            )
+
+    missing_specs = [
+        package_spec
+        for import_name, package_spec in SESSION_REQUIREMENTS
+        if importlib.util.find_spec(import_name) is None
+    ]
+    if missing_specs:
+        wheelhouse = drive_root / "wheelhouse" / f"py{sys.version_info.major}{sys.version_info.minor}"
+        online_command = [sys.executable, "-m", "pip", "install", "-q", *missing_specs]
+        if wheelhouse.is_dir() and any(wheelhouse.glob("*.whl")):
+            print(f"Installing missing packages using the Drive wheel cache: {missing_specs}")
+            cached_command = [
+                sys.executable, "-m", "pip", "install", "-q", "--no-index",
+                "--find-links", str(wheelhouse), *missing_specs,
+            ]
+            try:
+                subprocess.run(cached_command, check=True)
+            except subprocess.CalledProcessError:
+                print("Wheel cache was incomplete; falling back to PyPI.")
+                subprocess.run(online_command, check=True)
+        else:
+            print(f"Drive wheel cache missing; installing from PyPI: {missing_specs}")
+            subprocess.run(online_command, check=True)
+        importlib.invalidate_caches()
+else:
+    candidates = [Path.cwd().resolve(), *Path.cwd().resolve().parents]
+    for candidate in candidates:
+        if (candidate / "src" / "dgat_tutorial").is_dir():
+            tutorial_root = candidate
+            break
+    else:
+        raise FileNotFoundError("Could not locate hands-on_tutorial/ from the current directory.")
+
+os.chdir(tutorial_root)
+src_dir = tutorial_root / "src"
+if str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
+
+from dgat_tutorial.checkpoints import tutorial_paths, write_checkpoint
+
+paths = tutorial_paths(tutorial_root)
+completed = sorted(path.name for path in paths.checkpoints.glob("session_*/part_*.json"))
+print(f"Tutorial root: {paths.root}")
+print(f"Persistent state: {paths.checkpoints.parent}")
+print("Completed checkpoints:", completed or "none yet")"""
+
+
+def colab_bootstrap(requirements: list[tuple[str, str]], *, need_dgat: bool) -> str:
+    return (
+        COLAB_BOOTSTRAP_TEMPLATE
+        .replace("__SESSION_REQUIREMENTS__", repr(requirements))
+        .replace("__NEED_DGAT__", repr(need_dgat))
+    )
+
 def md(source: str):
     return nbf.v4.new_markdown_cell(dedent(source).strip() + "\n")
 
@@ -56,7 +172,8 @@ def write(relative_path: str, cells: list) -> None:
         "language": "python",
         "name": "python3",
     }
-    notebook.metadata["language_info"] = {"name": "python", "version": "3.10"}
+    notebook.metadata["language_info"] = {"name": "python", "version": "3.12"}
+    notebook.metadata["colab"] = {"provenance": []}
     destination = ROOT / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
     nbf.write(notebook, destination)
@@ -67,6 +184,8 @@ def combine_session_notebooks(
     title: str,
     summary: str,
     source_paths: list[str],
+    *,
+    bootstrap_source: str,
 ) -> None:
     """Combine a session's independently authored parts into one reader-facing notebook.
 
@@ -80,10 +199,15 @@ def combine_session_notebooks(
 
         {summary}
 
-        Work through the parts in order. Each part ends by writing its existing JSON checkpoint,
-        so the consolidation changes file organization without removing pause/resume milestones.
+        For workshop reproducibility, select **Runtime → Change runtime type → 2026.04**
+        (Python 3.12) before running the bootstrap.
+
+        Work through the parts in order. Outputs and JSON checkpoints are written to
+        `MyDrive/ECCB2026/state`, so they survive a Colab runtime reset. If the runtime stops,
+        rerun the bootstrap cell, inspect the printed completed checkpoints, and jump to the
+        first unfinished part; each part reloads its required inputs.
         """),
-        code(BOOTSTRAP),
+        code(bootstrap_source),
     ]
     metadata = None
     for source_path in source_paths:
@@ -107,6 +231,109 @@ def combine_session_notebooks(
         source = ROOT / source_path
         if source != target:
             source.unlink()
+
+
+write(
+    "notebooks/session_00/00_colab_setup.ipynb",
+    [
+        md("""
+        # Session 0 — Prepare Google Drive before the tutorial
+
+        Run this notebook **once before the workshop**. It stores the ~350 MB Tonsil RNA/ADT
+        pair and a Python wheel cache in `MyDrive/ECCB2026`. Later session notebooks use a new
+        Colab runtime when necessary, but reuse these persistent files instead of downloading
+        them again from the internet.
+
+        This notebook does not train DGAT and does not install the full tutorial environment.
+
+        Before running it, select **Runtime → Change runtime type → 2026.04** (Python 3.12).
+        Use the same runtime version for Sessions 1–3 so the cached wheels remain compatible.
+        """),
+        md("## 1. Mount Drive and fetch the small tutorial repository"),
+        code("""
+        from pathlib import Path
+        import importlib.util
+        import os
+        import subprocess
+        import sys
+
+        if importlib.util.find_spec("google.colab") is None:
+            raise RuntimeError("Open this notebook in Google Colab to prepare Google Drive.")
+
+        from google.colab import drive
+        drive.mount("/content/drive", force_remount=False)
+
+        repo_dir = Path("/content/ECCB-2026-Tutorial")
+        tutorial_root = repo_dir / "hands-on_tutorial"
+        if not (tutorial_root / "src" / "dgat_tutorial").is_dir():
+            subprocess.run(
+                ["git", "clone", "--depth", "1",
+                 "https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git", str(repo_dir)],
+                check=True,
+            )
+        os.chdir(tutorial_root)
+        print("Tutorial repository:", tutorial_root)
+        """),
+        md("## 2. Download the Tonsil assets directly into Drive"),
+        code("""
+        if importlib.util.find_spec("gdown") is None:
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "gdown>=5"], check=True)
+
+        drive_root = Path("/content/drive/MyDrive/ECCB2026")
+        asset_root = drive_root / "assets" / "DGAT_assets"
+        asset_root.mkdir(parents=True, exist_ok=True)
+        environment = os.environ.copy()
+        environment["DGAT_ASSET_DIR"] = str(asset_root)
+        command = ["bash", "scripts/download_dgat_assets.sh", "--data-only", "--dataset", "Tonsil"]
+        subprocess.run(command, cwd=tutorial_root, env=environment, check=True)
+        subprocess.run(command + ["--check-only"], cwd=tutorial_root, env=environment, check=True)
+        """),
+        md("## 3. Verify the downloads and record checksums"),
+        code("""
+        import hashlib
+        import json
+
+        data_dir = asset_root / "data"
+        manifest = {"python": sys.version.split()[0], "files": {}}
+        for filename in ("Tonsil_RNA.h5ad", "Tonsil_ADT.h5ad"):
+            path = data_dir / filename
+            if not path.is_file() or path.stat().st_size == 0:
+                raise FileNotFoundError(f"Missing or empty asset: {path}")
+            digest = hashlib.sha256()
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
+                    digest.update(chunk)
+            manifest["files"][filename] = {
+                "bytes": path.stat().st_size,
+                "sha256": digest.hexdigest(),
+            }
+
+        manifest_path = drive_root / "asset_manifest.json"
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\\n", encoding="utf-8")
+        print(json.dumps(manifest, indent=2))
+        """),
+        md("## 4. Cache the small Session 1 Python environment in Drive"),
+        code("""
+        wheelhouse = drive_root / "wheelhouse" / f"py{sys.version_info.major}{sys.version_info.minor}"
+        wheelhouse.mkdir(parents=True, exist_ok=True)
+        requirements = tutorial_root / "requirements-colab.txt"
+        subprocess.run(
+            [sys.executable, "-m", "pip", "download", "-q", "--only-binary=:all:",
+             "--dest", str(wheelhouse), "-r", str(requirements)],
+            check=True,
+        )
+        print(f"Cached {len(list(wheelhouse.glob('*.whl')))} wheels in {wheelhouse}")
+        """),
+        md("## 5. Create persistent state folders"),
+        code("""
+        for relative in ("state/data/processed", "state/results/figures", "state/checkpoints"):
+            (drive_root / relative).mkdir(parents=True, exist_ok=True)
+
+        print("Drive preparation complete:", drive_root)
+        print("You may close this runtime. Open the Session 1 notebook when the workshop begins.")
+        """),
+    ],
+)
 
 
 write(
@@ -1596,62 +1823,74 @@ write(
 
 
 combine_session_notebooks(
-    "notebooks/session_01/01_data_preparation.ipynb",
-    "Session 1A — Data preparation",
-    "Load and validate the paired Tonsil data, then apply the official DGAT quality-control and normalization workflow.",
+    "notebooks/session_01/session_01_data_and_spatial.ipynb",
+    "Session 1 — Data preparation and spatial context",
+    "Load and validate the paired Tonsil data, apply the official DGAT quality-control and normalization workflow, and construct spatial context.",
     [
         "notebooks/session_01/01_load_and_validate.ipynb",
         "notebooks/session_01/02_quality_control.ipynb",
-    ],
-)
-
-combine_session_notebooks(
-    "notebooks/session_01/02_spatial_context.ipynb",
-    "Session 1B — Spatial context",
-    "Build spatial and molecular neighborhoods, inspect feature maps, and explore modality structure.",
-    [
         "notebooks/session_01/03_spatial_neighborhoods.ipynb",
     ],
+    bootstrap_source=colab_bootstrap(
+        [
+            ("anndata", "anndata==0.11.4"),
+            ("scanpy", "scanpy==1.11.5"),
+            ("muon", "muon==0.1.7"),
+        ],
+        need_dgat=True,
+    ),
 )
 
 combine_session_notebooks(
-    "notebooks/session_02/01_dgat_model.ipynb",
-    "Session 2A — DGAT model",
-    "Prepare graph inputs and inspect the DGAT architecture and five-term training objective without launching full training.",
+    "notebooks/session_02/session_02_model_and_predictions.ipynb",
+    "Session 2 — DGAT model and pretrained predictions",
+    "Prepare graph inputs, inspect the DGAT architecture and objective without full training, then load and visualize the verified pretrained predictions.",
     [
         "notebooks/session_02/01_prepare_inputs.ipynb",
         "notebooks/session_02/02_build_dgat_model.ipynb",
         "notebooks/session_02/03_train_dgat.ipynb",
-    ],
-)
-
-combine_session_notebooks(
-    "notebooks/session_02/02_predictions.ipynb",
-    "Session 2B — Pretrained predictions",
-    "Load, validate, and visualize the verified pretrained DGAT prediction artifact.",
-    [
         "notebooks/session_02/04_load_predictions.ipynb",
         "notebooks/session_02/05_visualize_predictions.ipynb",
     ],
+    bootstrap_source=colab_bootstrap(
+        [
+            ("anndata", "anndata==0.11.4"),
+            ("scanpy", "scanpy==1.11.5"),
+            ("muon", "muon==0.1.7"),
+        ],
+        need_dgat=True,
+    ),
 )
 
 combine_session_notebooks(
-    "notebooks/session_03/01_quantitative_evaluation.ipynb",
-    "Session 3A — Quantitative evaluation",
-    "Evaluate inferred proteins with pointwise accuracy metrics and spatial-coherence diagnostics.",
+    "notebooks/session_03/session_03_evaluation_and_interpretation.ipynb",
+    "Session 3 — Evaluation and interpretation",
+    "Evaluate inferred proteins with pointwise and spatial diagnostics, then interpret molecular landscapes, residual structure, and exploratory clusters.",
     [
         "notebooks/session_03/01_correlation_evaluation.ipynb",
         "notebooks/session_03/02_spatial_coherence.ipynb",
-    ],
-)
-
-combine_session_notebooks(
-    "notebooks/session_03/02_interpretation.ipynb",
-    "Session 3B — Interpretation",
-    "Interpret inferred molecular landscapes, residual structure, exploratory clusters, and important limitations.",
-    [
         "notebooks/session_03/03_interpret_landscapes.ipynb",
     ],
+    bootstrap_source=colab_bootstrap(
+        [
+            ("anndata", "anndata==0.11.4"),
+            ("seaborn", "seaborn==0.13.2"),
+            ("sklearn", "scikit-learn==1.7.2"),
+        ],
+        need_dgat=False,
+    ),
 )
 
-print("Rebuilt six compact Colab teaching notebooks.")
+for stale_relative_path in (
+    "notebooks/session_01/01_data_preparation.ipynb",
+    "notebooks/session_01/02_spatial_context.ipynb",
+    "notebooks/session_02/01_dgat_model.ipynb",
+    "notebooks/session_02/02_predictions.ipynb",
+    "notebooks/session_03/01_quantitative_evaluation.ipynb",
+    "notebooks/session_03/02_interpretation.ipynb",
+):
+    stale_path = ROOT / stale_relative_path
+    if stale_path.exists():
+        stale_path.unlink()
+
+print("Rebuilt Session 0 Drive preparation plus three restart-safe Colab session notebooks.")

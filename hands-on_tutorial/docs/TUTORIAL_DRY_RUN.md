@@ -5,7 +5,7 @@
 > committed with executed inline outputs. Measurements below are from an earlier Breast
 > local dry-run and are retained for historical reference only.
 >
-> **Before workshop release:** confirm Colab Session 0 on a clean runtime, keep the Tonsil
+> **Before workshop release:** confirm Colab Session 0 Drive preparation on a clean runtime, keep the Tonsil
 > prediction artifact current (`fill_genes` + `preprocess_ST` + `protein_predict`), and
 > re-run `scripts/execute_tutorial_notebooks.sh` after substantive notebook edits.
 
@@ -84,3 +84,18 @@ No additional repository defect was found in the final remote-clone participant 
 - Preserved all part headings, exercises, artifact handoffs, and JSON checkpoint IDs inside the combined notebooks.
 - Kept a natural mid-session restart point so participants who fall behind can rejoin quickly.
 - Updated the Colab links, participant run order, notebook builder, and batch execution script for the compact layout.
+
+## Drive-backed, one-notebook-per-session layout: 11 August 2026
+
+- Replaced the six participant teaching notebooks with three notebooks, one for each scheduled
+  hands-on session.
+- Repurposed Session 0 as a pre-workshop Google Drive preparation notebook. It stores the Tonsil
+  pair, SHA-256 manifest, Python 3.12 wheel cache, and persistent state under `MyDrive/ECCB2026`.
+- Session bootstraps now clone only the small code repository, add `src/` directly to `sys.path`,
+  copy data from Drive to local VM storage, and install only missing session-specific packages.
+- Processed artifacts, figures, and JSON checkpoints persist under `MyDrive/ECCB2026/state`, so a
+  new runtime can resume at the first unfinished part.
+- Executed all three merged notebooks in order with the `eccb-dgat-tutorial` environment and local
+  Tonsil assets. All 11 part checkpoints were written and no notebook error outputs were produced.
+- Verified that the pinned Colab add-on requirements resolve to binary Python 3.12 wheels and that
+  the downloader accepts a Drive-backed `DGAT_ASSET_DIR` while retaining its normal local default.

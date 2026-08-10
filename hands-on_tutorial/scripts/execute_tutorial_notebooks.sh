@@ -13,18 +13,24 @@ fi
 export PYTHONPATH="${ROOT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
 mkdir -p results/figures data/processed checkpoints/session_01 checkpoints/session_02 checkpoints/session_03
 
-python <<'PY'
+PYTHON_BIN="${PYTHON_BIN:-python}"
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+fi
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  echo "No Python interpreter found. Activate the tutorial environment first."
+  exit 1
+fi
+
+"${PYTHON_BIN}" <<'PY'
 from pathlib import Path
 import nbformat
 from nbclient import NotebookClient
 
 notebooks = [
-    "notebooks/session_01/01_data_preparation.ipynb",
-    "notebooks/session_01/02_spatial_context.ipynb",
-    "notebooks/session_02/01_dgat_model.ipynb",
-    "notebooks/session_02/02_predictions.ipynb",
-    "notebooks/session_03/01_quantitative_evaluation.ipynb",
-    "notebooks/session_03/02_interpretation.ipynb",
+    "notebooks/session_01/session_01_data_and_spatial.ipynb",
+    "notebooks/session_02/session_02_model_and_predictions.ipynb",
+    "notebooks/session_03/session_03_evaluation_and_interpretation.ipynb",
 ]
 
 root = Path.cwd()

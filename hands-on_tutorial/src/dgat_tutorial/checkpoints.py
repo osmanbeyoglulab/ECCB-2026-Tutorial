@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -36,13 +37,15 @@ def find_tutorial_root(start: Path | None = None) -> Path:
 
 def tutorial_paths(start: Path | None = None) -> TutorialPaths:
     root = find_tutorial_root(start)
+    state_dir_value = os.environ.get("DGAT_TUTORIAL_STATE_DIR")
+    state_root = Path(state_dir_value).expanduser().resolve() if state_dir_value else root
     paths = TutorialPaths(
         root=root,
         raw_data=root / "data" / "raw",
-        processed_data=root / "data" / "processed",
-        results=root / "results",
-        figures=root / "results" / "figures",
-        checkpoints=root / "checkpoints",
+        processed_data=state_root / "data" / "processed",
+        results=state_root / "results",
+        figures=state_root / "results" / "figures",
+        checkpoints=state_root / "checkpoints",
     )
     for directory in (paths.processed_data, paths.results, paths.figures, paths.checkpoints):
         directory.mkdir(parents=True, exist_ok=True)
@@ -67,9 +70,14 @@ def write_checkpoint(
     artifact_rows = []
     for artifact in artifacts:
         resolved = Path(artifact).resolve()
+        try:
+            display_path = str(resolved.relative_to(paths.root))
+        except ValueError:
+            # Colab keeps restart-safe artifacts in Google Drive, outside the cloned repo.
+            display_path = str(resolved)
         artifact_rows.append(
             {
-                "path": str(resolved.relative_to(paths.root)),
+                "path": display_path,
                 "exists": resolved.exists(),
             }
         )

@@ -73,11 +73,12 @@ Official DGAT repository: <https://github.com/osmanbeyoglulab/DGAT>
 | 12:00–12:20 | Best practices and future directions |
 | 12:20–12:45 | Discussion and wrap-up |
 
-**Timing note:** prefer opening the Colab setup notebook and completing the Tonsil download early in
-the hands-on block. Instructors should prioritize Session 1 validation + Session 2
+**Timing note:** participants should complete the Drive preparation notebook before the workshop.
+Instructors should prioritize Session 1 validation + Session 2
 architecture/provenance + Session 3 evaluation. Full DGAT training is out of scope for the live
 Colab path.
 
-The tutorial uses seven participant-facing notebooks: Session 0 setup plus two compact,
-restart-friendly notebooks for each teaching session. Internal parts still reload their required
-inputs where useful and write small JSON completion manifests under `hands-on_tutorial/checkpoints/`.
+The tutorial uses four participant-facing notebooks: one pre-workshop Drive preparation notebook
+plus one restart-safe notebook per teaching session. Large assets and completion state persist in
+Google Drive; each session runtime shallow-clones only the small code repository and installs only
+missing session-specific packages.

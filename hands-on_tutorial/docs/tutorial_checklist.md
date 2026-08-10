@@ -5,7 +5,8 @@ Use this checklist before uploading the draft repository for ECCB committee revi
 ## Content
 
 - [x] README explains Colab-first setup, Tonsil example, schedule, and notebook order.
-- [ ] Each teaching notebook runs from top to bottom in a fresh Colab runtime (or local Conda).
+- [ ] Session 0 prepares Drive on a clean Colab account and each of the three teaching notebooks
+  runs from top to bottom in a fresh Colab runtime (or local Conda).
 - [x] Each Session 1–3 part can restart from its heading without in-memory state from an earlier part.
 - [x] Dataset access instructions use the 10x Genomics CytAssist Tonsil DGAT assets.
 - [x] Notebooks are committed with executed inline outputs/plots.
@@ -14,12 +15,15 @@ Use this checklist before uploading the draft repository for ECCB committee revi
 - [x] Developer `tests/` tree is not part of the public repository package.
 - [x] Precomputed official **Tonsil** predictions are available as `data/raw/dgat_predictions.csv`.
 - [ ] Prediction sidecar `tonsil_held_out` confirmed with authors before presenting held-out accuracy (currently `null` / unknown).
-- [ ] Session 0 Colab setup has been timed on conference Wi-Fi / reference accounts.
+- [ ] Session 0 Drive preparation has been timed before the workshop on reference accounts.
 - [ ] Common failure modes are documented in notebook markdown cells.
 
 ## Technical
 
-- [ ] Colab Session 0 setup notebook completes on a clean runtime.
+- [ ] Colab Session 0 creates the Drive asset manifest and Python wheel cache on a clean runtime.
+- [ ] A fresh Session 1–3 runtime reuses Drive assets without downloading the H5AD files publicly.
+- [ ] Sessions 1–2 install only the three packages in `requirements-colab.txt`; Session 3 installs
+  only missing packages from its smaller subset. No session installs the full local environment.
 - [ ] Optional local `conda env create -f environment.yml` still succeeds for organizers.
 - [x] Notebooks discover the `hands-on_tutorial/` root (local or `/content/...` Colab path).
 - [ ] Each part writes its JSON completion manifest under `checkpoints/`.
