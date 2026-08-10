@@ -15,21 +15,11 @@ __pycache__/
 # Data and generated outputs
 hands-on_tutorial/external/
 hands-on_tutorial/data/raw/*
-!hands-on_tutorial/data/raw/.gitkeep
-!hands-on_tutorial/data/raw/README_PREDICTIONS.md
 !hands-on_tutorial/data/raw/dgat_predictions.csv
 !hands-on_tutorial/data/raw/dgat_predictions.metadata.json
-!hands-on_tutorial/data/raw/dgat_predictions.breast_archive.csv
-!hands-on_tutorial/data/raw/dgat_predictions.breast_archive.metadata.json
-hands-on_tutorial/data/processed/*
-!hands-on_tutorial/data/processed/.gitkeep
-hands-on_tutorial/results/*
-!hands-on_tutorial/results/.gitkeep
-!hands-on_tutorial/results/figures/
-hands-on_tutorial/results/figures/*
-!hands-on_tutorial/results/figures/.gitkeep
-hands-on_tutorial/checkpoints/session_*/*
-!hands-on_tutorial/checkpoints/session_*/.gitkeep
+hands-on_tutorial/data/processed/
+hands-on_tutorial/results/
+hands-on_tutorial/checkpoints/
 
 # Large model files
 hands-on_tutorial/models/
@@ -45,3 +35,13 @@ hands-on_tutorial/tests/
 # Office temporary files
 ~$*
 *.pptx
+
+# Local authoring and inspection artifacts (not participant materials)
+.tmp_*
+*.inspect.ndjson
+output.png
+build_presenter_script.py
+DGAT_ECCB_Tutorial_Presenter_Script.docx
+DGAT_ECCB_Tutorial_Presenter_Script.pages
+ECCB_2026_DGAT_Participant_Email.docx
+ECCB_2026_DGAT_Participant_Email.pdf

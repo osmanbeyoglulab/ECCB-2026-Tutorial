@@ -8,7 +8,6 @@ from .data import (
     load_paired_h5ad_dataset,
     load_tutorial_data,
 )
-from .dgat import run_demo_dgat_inference, run_official_dgat_prediction
 from .evaluation import morans_i, protein_correlations
 
 __all__ = [
@@ -20,6 +19,4 @@ __all__ = [
     "load_tutorial_data",
     "morans_i",
     "protein_correlations",
-    "run_demo_dgat_inference",
-    "run_official_dgat_prediction",
 ]

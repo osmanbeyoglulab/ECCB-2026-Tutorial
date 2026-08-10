@@ -1,107 +1,61 @@
-# Session 0: prepare Google Drive for Colab
+# Participant preparation
 
-The hands-on tutorial runs in **Google Colab**. Participants do not need a local Conda
-environment or GPU. Full DGAT training is skipped because of Colab compute limits; Session 2
-teaches the architecture and losses, then loads verified pretrained Tonsil predictions.
+The hands-on tutorial runs in **Google Colab**. You do not need to install Python, Conda,
+Jupyter, DGAT, CUDA, or any Python packages on your laptop. A GPU is not required.
 
-The example dataset is the **10x Genomics CytAssist Tonsil** paired RNA/ADT sample used by DGAT
-(`Tonsil_RNA.h5ad` / `Tonsil_ADT.h5ad`).
+## What to prepare
 
-## What participants need
-
-- A Google account
+- A laptop and charger
 - A current web browser
-- Stable network for the first-time repo clone and ~350 MB Tonsil download
-- Colab runtime version **2026.04** selected under Runtime → Change runtime type
+- A Google account with access to Google Drive and Google Colab
+- At least 1 GB of free space in Google Drive
+- A stable connection for the one-time dataset download
+- Your Google two-factor authentication method, if enabled
 
-## Step 1 — Before the workshop, open the Drive preparation notebook
+## Before the workshop: run Notebook 0 once
 
-Open this notebook in Colab (GitHub → Open in Colab, or use the badge in
-[`README.md`](README.md)):
+1. Open [Notebook 0 — Prepare Google Drive](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/00_colab_setup.ipynb).
+2. Choose **Runtime → Change runtime type → 2026.04 (Python 3.12)**.
+3. Run every cell from top to bottom and approve the Google Drive mount.
+4. Wait for `Drive preparation complete: /content/drive/MyDrive/ECCB2026`.
+5. Keep `MyDrive/ECCB2026` in place. You may close the runtime after preparation.
 
-[`notebooks/session_00/00_colab_setup.ipynb`](notebooks/session_00/00_colab_setup.ipynb)
+Notebook 0 automatically downloads and verifies the paired Tonsil files
+`Tonsil_RNA.h5ad` and `Tonsil_ADT.h5ad` (about 350 MB total). It also creates a wheel cache and
+persistent folders for processed data, results, figures, and checkpoints. Do not download or move
+these files manually.
 
-Run every cell top to bottom. It will:
+## During the workshop
 
-1. mount your Google Drive and create `MyDrive/ECCB2026/`;
-2. shallow-clone the small tutorial repository into the temporary Colab VM;
-3. download the Tonsil RNA/ADT assets directly into Drive;
-4. compute and save SHA-256 checksums in `asset_manifest.json`;
-5. cache the Colab add-on wheels used by Sessions 1–2 for the current Python version;
-6. create persistent folders for processed data, results, figures, and checkpoints.
+Open notebooks with the direct links below. Do not open `.ipynb` files from Colab's `/content`
+Files pane; that pane may show a source preview instead of an executable notebook.
 
-Checkpoint: the final cell should print `Drive preparation complete: .../MyDrive/ECCB2026`.
-You may then close the Session 0 runtime; the downloaded files remain in Drive.
+1. [Notebook 1 — Data and spatial context](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/01_data_and_spatial.ipynb)
+2. [Notebook 2 — Model and predictions](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb)
+3. [Notebook 3 — Evaluation and interpretation](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb)
 
-## Step 2 — During the workshop, open one notebook per session
+Run the first bootstrap cell whenever a notebook receives a new runtime. It mounts Drive,
+refreshes the tutorial checkout, copies the prepared dataset to fast local storage, installs only
+missing packages, and reconnects your saved checkpoints.
 
-Use the Open-in-Colab links in [`README.md`](README.md). Do not open `.ipynb` files from
-Colab's `/content` Files pane: that pane shows a source preview, not an executable notebook.
+## If the runtime disconnects
 
-Run the first bootstrap cell whenever a session notebook receives a new runtime. It:
+1. Reopen the same notebook from its direct Colab link.
+2. Confirm runtime version 2026.04.
+3. Rerun the first bootstrap cell.
+4. Read the printed checkpoints and continue from the first unfinished part.
 
-1. mounts `MyDrive/ECCB2026`;
-2. shallow-clones the repository into `/content` when absent;
-3. copies the two pre-staged H5AD files from Drive to fast local VM storage;
-4. adds `src/` to Python's import path without installing the tutorial package;
-5. installs only missing session-specific packages, preferring the Drive wheel cache;
-6. reconnects processed outputs and checkpoints under `MyDrive/ECCB2026/state`.
-
-Recommended order:
-
-1. `notebooks/session_01/session_01_data_and_spatial.ipynb`
-2. `notebooks/session_02/session_02_model_and_predictions.ipynb` — **training is skipped**
-3. `notebooks/session_03/session_03_evaluation_and_interpretation.ipynb`
-
-The Python environment itself remains temporary—this is a Colab limitation—but the bootstrap is
-small. Sessions 1 and 2 install only `anndata`, `scanpy`, and `muon` when missing. Session 3
-requires `anndata` and otherwise uses the Colab base environment, with small fallbacks for
-Seaborn or scikit-learn if absent.
-
-## Step 3 — Confirm the inference artifact
-
-In Session 2 Part 4, the notebook should print the DGAT method and evaluation caveat, then write
-a processed prediction table with its provenance sidecar. Participants load the committed CSV;
-they do **not** run official `protein_predict` during the workshop.
-
-## Timing budget (Colab)
-
-| Block | Typical time |
-| --- | --- |
-| Pre-workshop Drive download (~350 MB), checksum, and wheel cache | 5–20+ min once |
-| New-session bootstrap | usually under a few minutes |
-| Copy Tonsil data from Drive to local Colab storage | network/Drive dependent, no public redownload |
-| Sessions 1–3 guided execution | remainder of hands-on blocks |
-
-If Colab disk or network fails, ask an instructor for the mirrored notebook runtime or the
-pre-staged Tonsil assets.
-
-## Optional local Conda path (organizers / offline)
-
-Local Conda remains available for organizers and offline dry-runs:
-
-```bash
-git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
-cd ECCB-2026-Tutorial/hands-on_tutorial
-conda env create -f environment.yml
-conda activate eccb-dgat-tutorial
-git clone --depth 1 https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
-bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil
-jupyter lab
-```
-
-Participants in the live ECCB session should prefer Colab unless an instructor directs otherwise.
+Do not repeat Notebook 0 or redownload the dataset unless the notebook reports that a Drive asset
+is missing or incomplete.
 
 ## Troubleshooting
 
-- **An `.ipynb` opened as source with `<undefined>` cells:** close the Files-pane preview and use
-  the notebook's Open-in-Colab link from `README.md`.
-- **Drive asset missing:** rerun Session 0; completed files are skipped and interrupted downloads
-  resume when supported by `gdown`.
-- **`ModuleNotFoundError: dgat_tutorial`:** rerun the first bootstrap cell in the current session
-  notebook. It adds the cloned `src/` directory directly to `sys.path`.
-- **Runtime disconnected:** reopen the same session notebook, rerun its bootstrap, and jump to the
-  first unfinished part listed by the printed checkpoints.
-- **Wrong dataset:** do not substitute Breast or other samples for the Tonsil participant path.
-- **Want to train DGAT:** not part of this tutorial. See the upstream
-  [DGAT repository](https://github.com/osmanbeyoglulab/DGAT) and organizer docs.
+- **Notebook shows `<undefined>` or raw source:** close the Files-pane preview and use the direct
+  Colab link above.
+- **Missing Drive asset:** rerun Notebook 0. Complete files are skipped, and interrupted downloads
+  resume when supported.
+- **`ModuleNotFoundError: dgat_tutorial`:** rerun the first bootstrap cell in the current notebook.
+- **Runtime reset:** rerun only the bootstrap, then continue from the first unfinished checkpoint.
+- **Wrong dataset:** use the Tonsil participant workflow; do not substitute another sample.
+
+Repository: <https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial>

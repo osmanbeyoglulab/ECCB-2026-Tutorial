@@ -94,7 +94,7 @@ def _find_h5ad_files(data_dir: str | Path) -> list[Path]:
             break
 
     # Only expand to ignored external asset folders when the caller is inside the tutorial tree.
-    # Temporary test directories must not silently resolve local organizer assets via Path.cwd().
+    # Temporary working directories must not silently resolve unrelated assets via Path.cwd().
     if tutorial_root is not None and data_dir.is_relative_to(tutorial_root):
         for candidate_dir in (
             tutorial_root / "external" / "DGAT_assets" / "DGAT_prediction_ST_data",

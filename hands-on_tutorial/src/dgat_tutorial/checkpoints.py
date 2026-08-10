@@ -25,13 +25,13 @@ def find_tutorial_root(start: Path | None = None) -> Path:
 
     current = (start or Path.cwd()).resolve()
     for candidate in (current, *current.parents):
-        if (candidate / "pyproject.toml").is_file() and (
-            candidate / "src" / "dgat_tutorial"
-        ).is_dir():
+        if (candidate / "src" / "dgat_tutorial").is_dir() and (
+            candidate / "requirements-colab.txt"
+        ).is_file():
             return candidate
     raise FileNotFoundError(
-        "Could not locate the hands-on tutorial root. Start Jupyter inside "
-        "hands-on_tutorial/ or one of its subdirectories."
+        "Could not locate the hands-on tutorial root. Open the notebook through "
+        "the participant Colab link and rerun its first bootstrap cell."
     )
 
 

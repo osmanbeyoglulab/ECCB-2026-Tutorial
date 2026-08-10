@@ -414,7 +414,7 @@ def process_modalities(
     """Validate, filter with official *training* CytAssist QC, and normalize paired data.
 
     For ST-only inference preprocessing (no MT / prevalence filters), use the official
-    ``preprocess_ST`` path via :func:`dgat_tutorial.dgat.run_official_dgat_prediction`.
+    ``preprocess_ST`` path used by the upstream pretrained inference workflow.
     """
 
     validate_modalities(spots, transcripts, proteins)
