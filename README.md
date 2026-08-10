@@ -36,7 +36,7 @@ No local Python, Conda, Jupyter, CUDA, or GPU installation is required.
 
 - [Participant setup guide](hands-on_tutorial/PARTICIPANT_SETUP.md)
 - [Hands-on overview](hands-on_tutorial/README.md)
-- [Presentation PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026.pdf)
+- [Presentation PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026_hands_on_with_outputs.pdf)
 - [Official DGAT repository](https://github.com/osmanbeyoglulab/DGAT)
 
 ## Tutorial schedule
