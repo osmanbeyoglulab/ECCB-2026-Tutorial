@@ -83,7 +83,11 @@ Participants in the live ECCB session should prefer Colab unless an instructor d
 
 ## Troubleshooting
 
-- **Module not found / tutorial root missing:** re-run `00_colab_setup.ipynb` in this runtime.
+- **`ModuleNotFoundError: dgat_tutorial` in Session 0:** make sure the setup notebook is
+  up to date, then re-run its Step 2 cell. The cell explicitly exposes the editable package's
+  `src/` directory to the already-running Colab kernel; a runtime restart is not required.
+- **Tutorial root missing in a Session 1–3 notebook:** re-run `00_colab_setup.ipynb` in this
+  runtime.
 - **Runtime disconnected:** reconnect and re-run setup; Colab does not keep `/content` forever.
 - **Wrong dataset:** do not substitute Breast or other samples for the Tonsil participant path.
 - **Want to train DGAT:** not part of this tutorial. See the upstream
