@@ -1,96 +1,90 @@
-# Session 0: live environment and data setup
+# Session 0: Google Colab setup
 
-Complete this worksheet **during the tutorial with the instructor**. Environment creation, data download,
-validation, and the first notebook are teaching activities—not prerequisites.
+The hands-on tutorial runs in **Google Colab**. Participants do not need a local Conda
+environment or GPU. Full DGAT training is skipped because of Colab compute limits; Session 2
+teaches the architecture and losses, then loads verified pretrained Tonsil predictions.
 
-## What participants need when they arrive
+The example dataset is the **10x Genomics CytAssist Tonsil** paired RNA/ADT sample used by DGAT
+(`Tonsil_RNA.h5ad` / `Tonsil_ADT.h5ad`).
 
-- A laptop with 4 CPU cores, 16 GB RAM recommended, and 10 GB free disk space
-- macOS, Linux, or Windows with WSL2
-- Conda or Mamba installed
-- Git and a current web browser
-- Network access for cloning the repository, creating the environment, and downloading about 270 MB
+## What participants need
 
-No GPU and no pre-created Python environment are required.
+- A Google account
+- A current web browser
+- Stable network for the first-time repo clone and ~350 MB Tonsil download
 
-## Step 1 — Clone the tutorial repository
+## Step 1 — Open the Colab setup notebook
 
-The instructor first explains the repository layout and then everyone runs:
+Open this notebook in Colab (GitHub → Open in Colab, or use the badge in
+[`README.md`](README.md)):
+
+[`notebooks/session_00/00_colab_setup.ipynb`](notebooks/session_00/00_colab_setup.ipynb)
+
+Run every cell top to bottom. It will:
+
+1. clone this repository under `/content` (or refresh an existing clone);
+2. `pip install` the lightweight tutorial package and dependencies;
+3. download and verify the Tonsil RNA/ADT assets;
+4. confirm that `data/raw/dgat_predictions.csv` is present.
+
+Checkpoint: the final cell should print `Tutorial root: .../hands-on_tutorial` and
+`Colab setup complete`.
+
+## Step 2 — Keep the Colab runtime and open Session 1
+
+Stay in the same Colab runtime (do not disconnect). Open the Session 1A notebook from the
+cloned tree, or use the Open-in-Colab badges in [`README.md`](README.md).
+
+Before the first Session notebook in a new Colab file, run the short bootstrap cell at the top
+of that notebook (it rediscovers `hands-on_tutorial/`). If you started a **new** runtime, re-run
+`00_colab_setup.ipynb` first.
+
+Recommended order (two restart-friendly notebooks per teaching session):
+
+1. `notebooks/session_01/01_data_preparation.ipynb`
+2. `notebooks/session_01/02_spatial_context.ipynb`
+3. `notebooks/session_02/01_dgat_model.ipynb` — includes the loss discussion; **training is skipped**
+4. `notebooks/session_02/02_predictions.ipynb`
+5. `notebooks/session_03/01_quantitative_evaluation.ipynb`
+6. `notebooks/session_03/02_interpretation.ipynb`
+
+## Step 3 — Confirm the inference artifact
+
+In Session 2 Part 4, the notebook should print the DGAT method and evaluation caveat, then write
+a processed prediction table with its provenance sidecar. Participants load the committed CSV;
+they do **not** run official `protein_predict` during the workshop.
+
+## Timing budget (Colab)
+
+| Block | Typical time |
+| --- | --- |
+| Open setup notebook + clone/install | 3–8 min |
+| Tonsil download (~350 MB) + check | 2–10+ min (network-dependent) |
+| Sessions 1–3 guided execution | remainder of hands-on blocks |
+
+If Colab disk or network fails, ask an instructor for the mirrored notebook runtime or the
+pre-staged Tonsil assets.
+
+## Optional local Conda path (organizers / offline)
+
+Local Conda remains available for organizers and offline dry-runs:
 
 ```bash
 git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
 cd ECCB-2026-Tutorial/hands-on_tutorial
-```
-
-Checkpoint: `pwd` should end in `hands-on_tutorial` and `ls` should show `environment.yml`, `notebooks/`,
-`scripts/`, and `src/`.
-
-## Step 2 — Create the participant environment
-
-The instructor explains why the lightweight participant environment is separate from the optional full DGAT
-training environment.
-
-```bash
 conda env create -f environment.yml
 conda activate eccb-dgat-tutorial
-python --version
-```
-
-Checkpoint: Python should be 3.10 and the shell prompt should show `eccb-dgat-tutorial`.
-
-If the environment already exists, update it during the same session:
-
-```bash
-conda env update -n eccb-dgat-tutorial -f environment.yml --prune
-conda activate eccb-dgat-tutorial
-```
-
-## Step 3 — Download and verify the Breast dataset
-
-The data download is part of the data-provenance lesson. The instructor explains which files are measurements,
-which predictions are committed, and why observed proteins must not be used as model inputs during evaluation.
-
-```bash
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only
-```
-
-The repository already contains the verified prediction artifact and its metadata sidecar:
-
-```text
-data/raw/dgat_predictions.csv
-data/raw/dgat_predictions.metadata.json
-```
-
-Checkpoint: the asset check passes and both prediction files exist. Do not replace them with locally fitted
-baseline outputs.
-
-## Step 4 — Launch Jupyter and select the tutorial kernel
-
-```bash
+git clone --depth 1 https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
+bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil
 jupyter lab
 ```
 
-Open `notebooks/session_01/01_load_and_validate.ipynb` and select **ECCB DGAT Tutorial**. Run the notebook with
-the instructor. It should report the paired Breast data source, spatial coordinates, and passing validation checks.
+Participants in the live ECCB session should prefer Colab unless an instructor directs otherwise.
 
-## Step 5 — Confirm the inference artifact
+## Troubleshooting
 
-Open `notebooks/session_02/04_load_predictions.ipynb`. It should print the DGAT method and evaluation caveat,
-then write a processed prediction table with its provenance sidecar.
-
-## Live-session timing budget
-
-- Repository clone and orientation: 3–5 minutes
-- Environment creation: 5–15 minutes
-- Breast data download and asset verification: 3–10 minutes, depending on the tutorial network
-- Jupyter launch, kernel selection, and first validation notebook: 5 minutes
-
-The instructor should have a local mirror of the repository, Conda packages, and Breast data available if the
-venue network is unreliable. That contingency is organizer infrastructure; participants still perform and learn
-the setup workflow during the session.
-
-## Troubleshooting during the session
-
-If a command fails, stop at that checkpoint and share the operating system, command, and complete error with an
-instructor. Do not silently switch environments or substitute another dataset for the official Breast workflow.
+- **Module not found / tutorial root missing:** re-run `00_colab_setup.ipynb` in this runtime.
+- **Runtime disconnected:** reconnect and re-run setup; Colab does not keep `/content` forever.
+- **Wrong dataset:** do not substitute Breast or other samples for the Tonsil participant path.
+- **Want to train DGAT:** not part of this tutorial. See the upstream
+  [DGAT repository](https://github.com/osmanbeyoglulab/DGAT) and organizer docs.

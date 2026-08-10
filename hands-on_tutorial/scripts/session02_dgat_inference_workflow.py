@@ -29,7 +29,7 @@ def main() -> None:
         help="Explicitly run the out-of-fold ridge baseline (not DGAT).",
     )
     parser.add_argument("--dgat-repo", type=Path, default=Path("external/DGAT"))
-    parser.add_argument("--model-save-dir", type=Path, default=Path("external/DGAT_assets/DGAT_pretrained_models"))
+    parser.add_argument("--model-save-dir", type=Path, default=Path("external/DGAT_assets/model_weights"))
     parser.add_argument("--pyg-data-dir", type=Path, default=Path("data/processed/dgat_pyg"))
     parser.add_argument("--common-gene", type=Path, default=None)
     parser.add_argument("--common-protein", type=Path, default=None)
@@ -41,7 +41,7 @@ def main() -> None:
 
     dgat_h5ad_pair = find_dgat_h5ad_pair(args.data_dir)
     dataset = load_tutorial_data(args.data_dir)
-    print(f"Loaded Breast AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
+    print(f"Loaded Tonsil AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
 
     spots = dataset.spots
     transcripts = dataset.transcripts

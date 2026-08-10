@@ -1,0 +1,3 @@
+sample_id,rna_path,protein_path
+EXAMPLE_SAMPLE_A,relative/path/to/SampleA_RNA.h5ad,relative/path/to/SampleA_ADT.h5ad
+EXAMPLE_SAMPLE_B,relative/path/to/SampleB_RNA.h5ad,relative/path/to/SampleB_ADT.h5ad

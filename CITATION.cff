@@ -1,7 +1,27 @@
 cff-version: 1.2.0
 message: "If you use this tutorial, please cite it using the metadata below."
-title: "ECCB Tutorial: Spatial Protein Inference with DGAT"
+title: "ECCB 2026 Tutorial: DGAT — Inferring Spatial Protein Landscapes from Transcriptomics"
 type: software
 authors:
-  - name: "ECCB Tutorial Organizers"
+  - family-names: "Osmanbeyoglu"
+    given-names: "Hatice Ulku"
+  - family-names: "Wang"
+    given-names: "Haoyu"
+  - family-names: "Cody"
+    given-names: "Brittany"
 license: MIT
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Wang"
+      given-names: "Haoyu"
+    - family-names: "Cody"
+      given-names: "Brittany"
+    - family-names: "Saavedra"
+      given-names: "M."
+    - family-names: "Osmanbeyoglu"
+      given-names: "Hatice Ulku"
+  title: "DGAT: a dual-graph attention network for inferring spatial protein landscapes from transcriptomics"
+  journal: "Nature Communications"
+  year: 2026
+  doi: "10.1038/s41467-026-73114-z"

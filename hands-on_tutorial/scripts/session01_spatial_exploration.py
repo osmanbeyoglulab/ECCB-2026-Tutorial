@@ -43,7 +43,7 @@ def main() -> None:
 
     dgat_h5ad_pair = find_dgat_h5ad_pair(args.data_dir)
     dataset = load_tutorial_data(args.data_dir)
-    print(f"Loaded Breast AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
+    print(f"Loaded Tonsil AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
 
     spots = dataset.spots
     transcripts = dataset.transcripts

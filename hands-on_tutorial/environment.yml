@@ -1,3 +1,6 @@
+# Participant environment. Versions are lower bounds for installability across
+# conference laptops. For bit-for-bit organizer dry-runs, export a frozen lock after
+# `conda env create` (e.g. `conda env export --no-builds > environment.lock.yml`).
 name: eccb-dgat-tutorial
 channels:
   - conda-forge
@@ -9,6 +12,7 @@ dependencies:
   - jupyterlab>=4
   - gdown>=5
   - matplotlib>=3.8
+  - muon>=0.1.7
   - numpy>=1.26
   - pandas>=2.1
   - scanpy>=1.10

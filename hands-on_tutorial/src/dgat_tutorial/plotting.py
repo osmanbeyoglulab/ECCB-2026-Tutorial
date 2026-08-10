@@ -12,13 +12,24 @@ def plot_spatial_feature(
     title: str,
     cmap: str = "viridis",
     ax: plt.Axes | None = None,
+    vmin: float | None = None,
+    vmax: float | None = None,
 ) -> plt.Axes:
     """Scatter a molecular feature over spatial coordinates."""
 
     if ax is None:
         _, ax = plt.subplots(figsize=(5, 4))
     aligned = values.loc[spots.index]
-    scatter = ax.scatter(spots["x"], spots["y"], c=aligned, s=28, cmap=cmap, edgecolor="none")
+    scatter = ax.scatter(
+        spots["x"],
+        spots["y"],
+        c=aligned,
+        s=28,
+        cmap=cmap,
+        edgecolor="none",
+        vmin=vmin,
+        vmax=vmax,
+    )
     ax.set_title(title)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -258,18 +269,22 @@ def plot_spatial_knn_graph(
     return fig, axes
 
 
-def plot_correlation_bar(correlations: pd.DataFrame, metric: str = "pearson") -> plt.Axes:
-    """Plot per-protein correlation scores with readable protein labels."""
+def plot_correlation_bar(correlations: pd.DataFrame, metric: str = "spearman") -> plt.Axes:
+    """Plot per-protein correlation or error scores with readable protein labels."""
 
-    ordered = correlations.sort_values(metric)
+    if metric not in correlations.columns:
+        raise ValueError(f"Metric {metric!r} not found in correlations table.")
+    ascending = metric.lower() == "rmse"
+    ordered = correlations.sort_values(metric, ascending=ascending)
     n_proteins = len(ordered)
     # Grow with the number of proteins so y-tick labels do not stack into a dense wall.
     height = max(4.5, 0.32 * n_proteins)
     _, ax = plt.subplots(figsize=(7.5, height))
     ax.barh(ordered["protein"], ordered[metric], color="#3b7a78", height=0.7)
-    ax.axvline(0, color="black", linewidth=0.8)
-    ax.set_xlim(-1, 1)
-    ax.set_xlabel(f"{metric.title()} correlation")
+    if metric.lower() != "rmse":
+        ax.axvline(0, color="black", linewidth=0.8)
+        ax.set_xlim(-1, 1)
+    ax.set_xlabel(metric.replace("_", " ").title())
     # Tick labels already name each protein; a separate "Protein" axis title adds clutter.
     ax.set_ylabel("")
     ax.set_title("Observed vs inferred protein expression")

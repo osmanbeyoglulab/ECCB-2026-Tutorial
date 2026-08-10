@@ -1,5 +1,14 @@
 # Participant dry-run log
 
+> **Current participant path:** Google Colab + **10x Genomics CytAssist Tonsil**
+> (`Tonsil_RNA.h5ad` / `Tonsil_ADT.h5ad`). Full DGAT training is skipped. Notebooks are
+> committed with executed inline outputs. Measurements below are from an earlier Breast
+> local dry-run and are retained for historical reference only.
+>
+> **Before workshop release:** confirm Colab Session 0 on a clean runtime, keep the Tonsil
+> prediction artifact current (`fill_genes` + `preprocess_ST` + `protein_predict`), and
+> re-run `scripts/execute_tutorial_notebooks.sh` after substantive notebook edits.
+
 This log records a clean-room setup from the remote repository on an Apple-silicon Mac. Repository defects are separated from machine- or test-harness-specific conditions.
 
 The measurements below were captured against the original three session notebooks before they were divided into independently runnable parts. They remain the runtime and provenance baseline for the same underlying workflow.
@@ -65,6 +74,13 @@ No additional repository defect was found in the final remote-clone participant 
 
 - Session 1 now teaches object validation, modality-specific QC, explicit filtering, RNA library-size/log normalization, protein CLR normalization, spatial graph construction, feature maps, and exploratory embeddings.
 - Session 2 now contains five parts: graph inputs, four-module DGAT construction, five-loss training workflow, pretrained inference/provenance, and predicted-protein visualization.
-- The previous partial execution record is superseded. All data-processing and model-teaching parts now require the official paired Breast assets; a fresh full run with those files is required before workshop release. Part 2.4 separately validated the committed official prediction artifact.
+- The previous partial execution record is superseded. All data-processing and model-teaching parts now require the official paired **Tonsil** assets; a fresh full run with those files is required before workshop release. Part 2.4 must validate a committed Tonsil prediction artifact (not the Breast archive).
 - Validated all 11 notebook documents with `nbformat` and parsed every Python code cell. All 12 focused unit tests passed.
 - The historical timing measurements above predate this expansion and must not be presented as timings for the revised notebooks. A fresh official-environment execution is required before the final workshop release.
+
+## Compact, restart-friendly notebook layout: 9 August 2026
+
+- Consolidated the 11 Session 1–3 part files into six participant-facing notebooks, two per teaching session.
+- Preserved all part headings, exercises, artifact handoffs, and JSON checkpoint IDs inside the combined notebooks.
+- Kept a natural mid-session restart point so participants who fall behind can rejoin quickly.
+- Updated the Colab links, participant run order, notebook builder, and batch execution script for the compact layout.

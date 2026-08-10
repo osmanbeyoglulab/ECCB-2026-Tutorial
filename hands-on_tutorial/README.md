@@ -1,144 +1,135 @@
 # Hands-on tutorial
 
-This directory is a self-contained, executable tutorial for DGAT spatial protein inference. Run setup commands from this directory so paths are consistent in Jupyter, scripts, tests, and Docker.
+Self-contained DGAT spatial protein inference tutorial for ECCB 2026.
 
-## Session 0 — live setup
+**Runtime:** [Google Colab](https://colab.research.google.com/) (preferred for participants).
 
-Environment creation and data acquisition are part of the tutorial. At the beginning of the session, the
-instructor will explain and run each command with participants:
+**Dataset:** 10x Genomics CytAssist **Tonsil** paired RNA/ADT (`Tonsil_RNA.h5ad` / `Tonsil_ADT.h5ad`).
 
-```bash
-git clone https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git
-cd ECCB-2026-Tutorial/hands-on_tutorial
-conda env create -f environment.yml
-conda activate eccb-dgat-tutorial
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only
-jupyter lab
-```
+**Training:** skipped in the live path because of Colab compute limits; notebooks teach the
+objective and load verified pretrained predictions.
 
-Do not run these steps in advance. The instructor will pause after environment creation and after the asset check
-so setup problems can be resolved as a group. The live worksheet is [`PARTICIPANT_SETUP.md`](PARTICIPANT_SETUP.md).
+**Notebooks:** committed with executed outputs so plots are visible inline on GitHub and in Colab.
+
+## Start in Colab
+
+1. Open Session 0 setup:
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_00/00_colab_setup.ipynb)
+
+2. Follow the worksheet: [`PARTICIPANT_SETUP.md`](PARTICIPANT_SETUP.md).
+
+3. Continue through the six teaching notebooks below. Keep the same Colab runtime after setup.
+
+| Session | Notebook | Colab |
+| --- | --- | --- |
+| 0 | `notebooks/session_00/00_colab_setup.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_00/00_colab_setup.ipynb) |
+| 1A | `notebooks/session_01/01_data_preparation.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_01/01_data_preparation.ipynb) |
+| 1B | `notebooks/session_01/02_spatial_context.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_01/02_spatial_context.ipynb) |
+| 2A | `notebooks/session_02/01_dgat_model.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_02/01_dgat_model.ipynb) |
+| 2B | `notebooks/session_02/02_predictions.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_02/02_predictions.ipynb) |
+| 3A | `notebooks/session_03/01_quantitative_evaluation.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_03/01_quantitative_evaluation.ipynb) |
+| 3B | `notebooks/session_03/02_interpretation.ipynb` | [Open](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_03/02_interpretation.ipynb) |
 
 ## Run order and checkpoints
 
-Every notebook is independently runnable after the live Session 0 checkpoint. It discovers the tutorial root, reloads the source data it needs, writes named artifacts under `results/` or `data/processed/`, and records completion in `checkpoints/session_XX/part_X_X.json`.
+Each teaching notebook contains one to three clearly labeled parts. Parts rediscover the tutorial
+root and reload Tonsil inputs where needed, so an instructor can resume after a Colab interruption.
+They write artifacts under `results/` or `data/processed/` and retain the existing completion
+manifests under `checkpoints/session_XX/part_X_X.json`.
 
-| Part | Notebook | Output checkpoint |
-| --- | --- | --- |
-| 1.1 | `notebooks/session_01/01_load_and_validate.ipynb` | validated multi-modal data-object summary |
-| 1.2 | `notebooks/session_01/02_quality_control.ipynb` | RNA/protein QC, filtering audit, normalized matrices, and figures |
-| 1.3 | `notebooks/session_01/03_spatial_neighborhoods.ipynb` | spatial graph, normalized feature maps, and modality embeddings |
-| 2.1 | `notebooks/session_02/01_prepare_inputs.ipynb` | paired graph dimensions, aligned IDs, and edge index |
-| 2.2 | `notebooks/session_02/02_build_dgat_model.ipynb` | four-module architecture table and figure |
-| 2.3 | `notebooks/session_02/03_train_dgat.ipynb` | five-loss training workflow and optional official training call |
-| 2.4 | `notebooks/session_02/04_load_predictions.ipynb` | prediction matrix and provenance sidecar |
-| 2.5 | `notebooks/session_02/05_visualize_predictions.ipynb` | prediction distributions and spatial maps |
-| 3.1 | `notebooks/session_03/01_correlation_evaluation.ipynb` | correlation table and figure |
-| 3.2 | `notebooks/session_03/02_spatial_coherence.ipynb` | Moran's I table and figure |
-| 3.3 | `notebooks/session_03/03_interpret_landscapes.ipynb` | landscape figure and discussion prompts |
+| Teaching notebook | Included parts and outputs |
+| --- | --- |
+| Session 0 setup | Colab environment + Tonsil assets ready |
+| Session 1A data preparation | 1.1 validated object; 1.2 QC plus saved filtered and normalized datasets |
+| Session 1B spatial context | 1.3 graphs, maps, and embeddings |
+| Session 2A DGAT model | 2.1 graph inputs; 2.2 architecture; 2.3 five-loss discussion |
+| Session 2B predictions | 2.4 prediction provenance; 2.5 prediction maps |
+| Session 3A quantitative evaluation | 3.1 pointwise metrics; 3.2 spatial coherence |
+| Session 3B interpretation | 3.3 landscapes and interpretation prompts |
 
 ### Resume behavior
 
-- Parts never depend on in-memory state from an earlier notebook.
-- Every data-consuming notebook requires the official paired Breast RNA/ADT files downloaded during Session 0.
-- Session 2, Part 3 defines and explains a complete optimization step. The upstream full-data training call is opt-in and requires the separate official environment and training assets.
-- Session 2, Part 4 can run without earlier parts because it validates the committed prediction artifact directly.
-- Session 2, Part 5 and all Session 3 parts prefer `data/processed/predicted_proteins.csv` when it exists, then fall back to the committed `data/raw/dgat_predictions.csv`.
-- If the Breast RNA/ADT pair is missing or incomplete, the notebooks stop with the Session 0 download and verification commands.
-- Session 2 Parts 4–5 and Session 3 require the official matching DGAT data and predictions; they never mix datasets.
-
-To reset only the generated checkpoints, remove the JSON files inside `checkpoints/session_*/`. The source notebooks and committed data are unaffected.
+- Prefer **artifact handoffs** under `data/processed/` when present.
+- Session 2 Part 3 explains the official five-term objective; it does **not** train a model.
+- Session 2 Part 4 loads the committed Tonsil prediction artifact.
+- Official DGAT graphs are `spatial 6-NN ∪ molecular 10-NN` (RNA molecular neighbors use PCA when
+  >1500 genes).
+- **Training** preprocessing directly calls upstream `qc_control_cytassist` + `normalize` (700 genes, 35% MT,
+  2.5% gene prevalence, encoding-gene keep list, RNA scale clip 10, protein CLR via
+  `muon.prot.pp.clr` default `axis=0`).
+- **ST inference** preprocessing matches `fill_genes` + `preprocess_ST`.
+- Model teaching defaults: `hidden_dim=1024`, encoder `dropout=0.3`,
+  train loss weights `(α,β,γ,δ,η)=(5,1,1,3,1)` with soft-zero threshold `0.015`.
+- Public pretrained ST checkpoints use the **11,535-gene / 31-protein** common lists.
 
 ## Directory map
 
 ```text
 hands-on_tutorial/
 ├── notebooks/
-│   ├── session_01/
-│   ├── session_02/
-│   └── session_03/
+│   ├── session_00/          # Colab setup
+│   ├── session_01/          # data preparation + spatial context
+│   ├── session_02/          # model concepts + pretrained predictions
+│   └── session_03/          # quantitative evaluation + interpretation
 ├── checkpoints/
-│   ├── session_01/
-│   ├── session_02/
-│   └── session_03/
 ├── data/
-│   ├── raw/
+│   ├── raw/                 # committed Tonsil predictions (+ local downloads)
 │   └── processed/
 ├── results/figures/
 ├── scripts/
 ├── src/dgat_tutorial/
-├── tests/
 ├── docs/
-├── environment.yml
-├── environment-dgat-cpu.yml
+├── environment.yml          # optional local Conda path
+├── environment-dgat-cpu.yml # organizer official-DGAT env
 ├── requirements.txt
 └── pyproject.toml
 ```
 
 ## Data and prediction provenance
 
-The participant path uses the official DGAT `.h5ad` data and the committed verified prediction table at `data/raw/dgat_predictions.csv`. Its adjacent metadata sidecar records method, source, evaluation caveat, DGAT commit, and checkpoint hashes. The notebooks never silently fit a model to evaluation proteins.
-
-Download the participant data only:
-
-```bash
-bash scripts/download_dgat_assets.sh --data-only --dataset Breast
-```
-
-Repository maintainers can reproduce all supported assets outside the participant workflow:
+Participant notebooks use the Tonsil `.h5ad` pair and committed
+`data/raw/dgat_predictions.csv`. Colab Session 0 downloads measurements; it does **not** run
+`protein_predict`. Organizers regenerate predictions with
+`scripts/run_official_dgat_prediction.py` (see `data/raw/README_PREDICTIONS.md`).
 
 ```bash
-bash scripts/download_dgat_assets.sh
-bash scripts/download_dgat_assets.sh --check-only
+bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil
 ```
 
 Downloaded assets live under `external/DGAT_assets/` and remain ignored by Git.
 
-## Command-line path
-
-The existing session scripts provide a non-Jupyter route:
-
-```bash
-PYTHONPATH=src python scripts/session01_spatial_exploration.py
-PYTHONPATH=src python scripts/session02_dgat_inference_workflow.py
-PYTHONPATH=src python scripts/session03_evaluation_interpretation.py
-```
-
-## Maintainer-only DGAT artifact reproduction
-
-This route documents how the committed prediction artifact was produced. It is not a participant prerequisite or
-an environment-setup step in the tutorial. Participants create only the lightweight environment during Session 0.
+## Maintainer-only prediction reproduction
 
 ```bash
 conda env create -f environment-dgat-cpu.yml
 conda activate eccb-dgat-official
 git clone --depth 1 https://github.com/osmanbeyoglulab/DGAT.git external/DGAT
 bash scripts/download_dgat_assets.sh
-PYTHONPATH=src python scripts/check_dgat_environment.py
-PYTHONPATH=src python scripts/run_official_dgat_prediction.py --help
+PYTHONPATH=src python scripts/run_official_dgat_prediction.py \
+  --rna-h5ad external/DGAT_assets/data/Tonsil_RNA.h5ad \
+  --output data/raw/dgat_predictions.csv
 ```
 
-Do not install the official DGAT dependency stack into the lightweight participant environment.
+## Re-execute notebooks with outputs (maintainers)
+
+From `hands-on_tutorial/` after Tonsil assets are present:
+
+```bash
+bash scripts/execute_tutorial_notebooks.sh
+```
+
+This writes inline plots/outputs into the Session 1–3 notebooks (Session 0 Colab setup is not
+batch-executed locally).
 
 ## What participants learn
 
-The notebook sequence now exposes the complete path instead of starting from a saved model:
-
-1. validate a paired spatial RNA/protein object;
-2. inspect modality-specific QC and visualize filtering/normalization effects;
-3. create the spatial kNN edge index;
-4. construct the RNA encoder, protein encoder, RNA decoder, and branched protein decoder;
-5. combine reconstruction, alignment, and cross-modal prediction losses in the training loop;
-6. understand validation, checkpointing, and RNA-only inference; and
-7. generate QC, predicted-landscape, correlation, spatial-coherence, and interpretation figures.
-
-## Verification
-
-```bash
-python -m pip install -e .
-python -m unittest discover -s tests
-python -m compileall src scripts
-```
+1. validate a paired spatial RNA/protein object (Tonsil);
+2. inspect CytAssist *training* QC vs ST *inference* prep;
+3. build spatial ∪ molecular DGAT graphs;
+4. construct the four DGAT modules;
+5. understand the five weighted losses without running training;
+6. load verified pretrained predictions;
+7. evaluate on CLR-scaled observed proteins (correlation, spatial coherence, interpretation).
 
 Organizer dry-run notes and the upload checklist are in [`docs/`](docs/).

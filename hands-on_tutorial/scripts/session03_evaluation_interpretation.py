@@ -11,6 +11,7 @@ from dgat_tutorial.data import find_dgat_h5ad_pair, load_tutorial_data
 from dgat_tutorial.dgat import load_prediction_metadata, run_demo_dgat_inference, write_prediction_artifact
 from dgat_tutorial.evaluation import morans_i, protein_correlations
 from dgat_tutorial.plotting import plot_correlation_bar, plot_spatial_feature
+from dgat_tutorial.processing import prepare_evaluation_proteins
 
 
 def main() -> None:
@@ -31,7 +32,7 @@ def main() -> None:
 
     dgat_h5ad_pair = find_dgat_h5ad_pair(args.data_dir)
     dataset = load_tutorial_data(args.data_dir)
-    print(f"Loaded Breast AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
+    print(f"Loaded Tonsil AnnData files: RNA={dgat_h5ad_pair[0]}, ADT={dgat_h5ad_pair[1]}")
 
     spots = dataset.spots
     transcripts = dataset.transcripts
@@ -64,7 +65,7 @@ def main() -> None:
 
     common_spots = spots.index.intersection(proteins.index).intersection(predicted_proteins.index)
     spots = spots.loc[common_spots]
-    proteins = proteins.loc[common_spots]
+    proteins = prepare_evaluation_proteins(proteins.loc[common_spots])
     transcripts = transcripts.loc[common_spots]
     predicted_proteins = predicted_proteins.loc[common_spots]
 

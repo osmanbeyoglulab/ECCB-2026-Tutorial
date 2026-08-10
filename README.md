@@ -1,6 +1,8 @@
-# ECCB 2026 Tutorial: Computational inference of spatial protein landscapes: methods, assumptions and pitfalls
+# ECCB 2026 Tutorial: DGAT — Inferring Spatial Protein Landscapes from Transcriptomics: Methods, Assumptions, and Pitfalls
 
-This repository contains the lecture slides and hands-on materials for the ECCB 2026 tutorial on computational inference of spatial protein landscapes. The tutorial introduces spatial transcriptomics, spatial proteomics, and multimodal technologies; examines why spatial context matters for transcript-to-protein prediction; and presents the assumptions, evaluation strategies, and common pitfalls associated with computational protein inference. Participants will apply these concepts through a DGAT-based workflow using Python and Jupyter notebooks.
+This repository contains the lecture slides (PDF) and hands-on materials for the ECCB 2026 tutorial on computational inference of spatial protein landscapes. The tutorial introduces spatial transcriptomics, spatial proteomics, and multimodal technologies; examines why spatial context matters for transcript-to-protein prediction; and presents the assumptions, evaluation strategies, and common pitfalls associated with computational protein inference.
+
+Participants work through a DGAT-based workflow in **Google Colab** using the **10x Genomics CytAssist Tonsil** example. Full model training is skipped because of compute constraints; notebooks teach the architecture and losses, then evaluate verified pretrained predictions. Notebooks are committed **with executed outputs** so figures are visible inline.
 
 By the end of the tutorial, participants will be able to:
 
@@ -9,7 +11,7 @@ By the end of the tutorial, participants will be able to:
 - Understand how tissue architecture and spatial neighborhoods inform protein prediction.
 - Compare spatial and non-spatial protein-inference approaches.
 - Explain the molecular and spatial graph components of DGAT.
-- Run a pretrained DGAT model on spatial transcriptomics data.
+- Load verified pretrained DGAT predictions on Tonsil spatial transcriptomics data.
 - Evaluate predictions using correlation, spatial coherence, and biological validation.
 - Recognize dataset shift, batch effects, missing cell types, overinterpretation, and other common failure modes.
 
@@ -25,12 +27,11 @@ By the end of the tutorial, participants will be able to:
 ```text
 .
 ├── overview/
-│   ├── Osmanbeyoglu_ECCB_Tutorial_2026.pdf
-│   └── eccb_2026_dgat_tutorial_slides.pptx
+│   └── Osmanbeyoglu_ECCB_Tutorial_2026.pdf
 ├── hands-on_tutorial/
-│   ├── notebooks/              # 3 sessions; expanded five-part DGAT workflow in Session 2
+│   ├── notebooks/              # Session 0 Colab setup + Sessions 1–3 (executed outputs)
 │   ├── checkpoints/            # generated completion manifests
-│   ├── data/                   # committed predictions + local data
+│   ├── data/                   # committed Tonsil predictions + local data
 │   ├── scripts/                # command-line and organizer workflows
 │   ├── src/dgat_tutorial/      # shared Python package
 │   ├── results/                # generated tables and figures
@@ -43,14 +44,18 @@ By the end of the tutorial, participants will be able to:
 
 ## Presentation materials
 
-- [Download the PowerPoint presentation](overview/eccb_2026_dgat_tutorial_slides.pptx)
 - [View or download the presentation PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026.pdf)
+
+Lecture slides are distributed as PDF only (no PowerPoint in this repository).
 
 ## Start here
 
-- Presenters: open the [PowerPoint deck](overview/eccb_2026_dgat_tutorial_slides.pptx), the [PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026.pdf), or the [`overview/` guide](overview/README.md).
-- Participants: begin with the instructor-led [`hands-on_tutorial/PARTICIPANT_SETUP.md`](hands-on_tutorial/PARTICIPANT_SETUP.md) worksheet during the tutorial.
-- Instructors: use the run order and checkpoint map in [`hands-on_tutorial/README.md`](hands-on_tutorial/README.md).
+- Presenters: open the [PDF](overview/Osmanbeyoglu_ECCB_Tutorial_2026.pdf) or the [`overview/` guide](overview/README.md).
+- Participants: follow [`hands-on_tutorial/PARTICIPANT_SETUP.md`](hands-on_tutorial/PARTICIPANT_SETUP.md) and start with the Colab setup notebook:
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/session_00/00_colab_setup.ipynb)
+
+- Instructors: run order and checkpoint map in [`hands-on_tutorial/README.md`](hands-on_tutorial/README.md).
 
 Official DGAT repository: <https://github.com/osmanbeyoglulab/DGAT>
 
@@ -62,10 +67,17 @@ Official DGAT repository: <https://github.com/osmanbeyoglulab/DGAT>
 | 09:15–10:00 | Spatial omics technologies |
 | 10:00–10:30 | Computational protein inference and DGAT |
 | 10:30–10:45 | Coffee break |
-| 10:45–11:15 | Hands-on Session 1 | Live environment setup, data download, QC, and normalization |
-| 11:15–11:40 | Hands-on Session 2 | DGAT model construction, training, and inference |
+| 10:45–11:15 | Hands-on Session 1 | Colab setup, Tonsil data, QC, and normalization |
+| 11:15–11:40 | Hands-on Session 2 | DGAT architecture, loss discussion (no training), pretrained inference |
 | 11:40–12:00 | Hands-on Session 3 | Evaluation and interpretation |
 | 12:00–12:20 | Best practices and future directions |
 | 12:20–12:45 | Discussion and wrap-up |
 
-The tutorial uses independently runnable parts (three in Sessions 1 and 3, five in the expanded DGAT-building/training Session 2). Every part reloads its required inputs and writes a small JSON completion manifest under `hands-on_tutorial/checkpoints/`, making the part boundaries usable as live-session checkpoints and restart points.
+**Timing note:** prefer opening the Colab setup notebook and completing the Tonsil download early in
+the hands-on block. Instructors should prioritize Session 1 validation + Session 2
+architecture/provenance + Session 3 evaluation. Full DGAT training is out of scope for the live
+Colab path.
+
+The tutorial uses seven participant-facing notebooks: Session 0 setup plus two compact,
+restart-friendly notebooks for each teaching session. Internal parts still reload their required
+inputs where useful and write small JSON completion manifests under `hands-on_tutorial/checkpoints/`.

@@ -16,8 +16,11 @@ __pycache__/
 hands-on_tutorial/external/
 hands-on_tutorial/data/raw/*
 !hands-on_tutorial/data/raw/.gitkeep
+!hands-on_tutorial/data/raw/README_PREDICTIONS.md
 !hands-on_tutorial/data/raw/dgat_predictions.csv
 !hands-on_tutorial/data/raw/dgat_predictions.metadata.json
+!hands-on_tutorial/data/raw/dgat_predictions.breast_archive.csv
+!hands-on_tutorial/data/raw/dgat_predictions.breast_archive.metadata.json
 hands-on_tutorial/data/processed/*
 !hands-on_tutorial/data/processed/.gitkeep
 hands-on_tutorial/results/*
@@ -36,5 +39,9 @@ hands-on_tutorial/models/
 *.h5ad
 *.h5
 
+# Developer test tree is not part of the public tutorial package
+hands-on_tutorial/tests/
+
 # Office temporary files
 ~$*
+*.pptx

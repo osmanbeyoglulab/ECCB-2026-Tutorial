@@ -4,35 +4,31 @@ Use this checklist before uploading the draft repository for ECCB committee revi
 
 ## Content
 
-- [ ] README explains the tutorial goal, schedule, setup, and notebook order.
-- [ ] Each checkpoint notebook runs from top to bottom in a fresh environment.
-- [ ] Each notebook can start independently without in-memory state from an earlier part.
-- [ ] Dataset access instructions are clear and legally shareable.
-- [ ] Any real data files are either small enough for GitHub or replaced by download instructions.
-- [ ] DGAT model weights are either included only if permitted or downloaded by documented instructions.
-- [ ] Official DGAT repository setup has been tested from a clean environment.
-- [ ] Official DGAT `.h5ad` prediction data loads directly in the tutorial notebooks.
-- [x] Precomputed official predictions are available as `data/raw/dgat_predictions.csv`.
-- [x] Precomputed predictions include DGAT/checkpoint provenance and were not fitted on the evaluation proteins.
-- [ ] The instructor-led Session 0 setup worksheet has been timed on the tutorial network and reference laptops.
-- [x] Expected runtime and peak memory are measured on the final assets and a clean reference machine.
+- [x] README explains Colab-first setup, Tonsil example, schedule, and notebook order.
+- [ ] Each teaching notebook runs from top to bottom in a fresh Colab runtime (or local Conda).
+- [x] Each Session 1–3 part can restart from its heading without in-memory state from an earlier part.
+- [x] Dataset access instructions use the 10x Genomics CytAssist Tonsil DGAT assets.
+- [x] Notebooks are committed with executed inline outputs/plots.
+- [x] Full DGAT training is skipped in the participant path (discussion + pretrained predictions only).
+- [x] Lecture slides are PDF-only under `overview/` (no PowerPoint).
+- [x] Developer `tests/` tree is not part of the public repository package.
+- [x] Precomputed official **Tonsil** predictions are available as `data/raw/dgat_predictions.csv`.
+- [ ] Prediction sidecar `tonsil_held_out` confirmed with authors before presenting held-out accuracy (currently `null` / unknown).
+- [ ] Session 0 Colab setup has been timed on conference Wi-Fi / reference accounts.
 - [ ] Common failure modes are documented in notebook markdown cells.
 
 ## Technical
 
-- [ ] `conda env create -f environment.yml` succeeds.
-- [ ] `pip install -r requirements.txt` succeeds.
-- [ ] `conda env create -f environment-dgat-cpu.yml` succeeds separately on Python 3.11.
-- [ ] `PYTHONPATH=src python scripts/check_dgat_environment.py` passes with official assets.
-- [x] Notebooks discover the `hands-on_tutorial/` root from any session directory.
+- [ ] Colab Session 0 setup notebook completes on a clean runtime.
+- [ ] Optional local `conda env create -f environment.yml` still succeeds for organizers.
+- [x] Notebooks discover the `hands-on_tutorial/` root (local or `/content/...` Colab path).
 - [ ] Each part writes its JSON completion manifest under `checkpoints/`.
 - [ ] Generated files are written under `results/` or `data/processed/`.
-- [ ] Large generated files are ignored by `.gitignore`.
+- [ ] Large generated files / `.h5ad` / checkpoints remain ignored by `.gitignore`.
 - [ ] No private paths, credentials, or unpublished data are committed.
-- [x] Session 2, Part 2 explains and optionally instantiates all four official DGAT modules.
-- [x] Session 2, Part 3 exposes the five-term objective, optimization step, validation, and checkpoint workflow.
+- [x] Session 2, Part 3 teaches losses without launching training.
 - [x] Session 2, Part 4 loads precomputed official DGAT predictions and never substitutes the ridge baseline.
-- [x] Session 3, Part 1 prints the prediction method and evaluation caveat before metrics.
+- [x] Session 3, Part 1 CLR-normalizes observed ADT before metrics and prints held-out provenance caveats.
 
 ## Review Package
 

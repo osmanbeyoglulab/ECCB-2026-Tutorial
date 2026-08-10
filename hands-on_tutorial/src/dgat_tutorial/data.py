@@ -6,6 +6,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+# Participant tutorial sample (official DGAT training-asset filenames).
+TUTORIAL_DATASET_NAME = "Tonsil"
+TUTORIAL_RNA_FILENAME = "Tonsil_RNA.h5ad"
+TUTORIAL_ADT_FILENAME = "Tonsil_ADT.h5ad"
+
 
 @dataclass(frozen=True)
 class SpatialOmicsData:
@@ -17,10 +22,10 @@ class SpatialOmicsData:
 
 
 def load_tutorial_data(data_dir: str | Path) -> SpatialOmicsData:
-    """Load the official paired Breast RNA and ADT AnnData files.
+    """Load the official paired Tonsil RNA and ADT AnnData files.
 
     The participant workflow intentionally has no generated-data substitute.
-    Missing or incomplete Breast assets stop with an actionable setup error.
+    Missing or incomplete Tonsil assets stop with an actionable setup error.
     """
 
     data_dir = Path(data_dir)
@@ -29,9 +34,9 @@ def load_tutorial_data(data_dir: str | Path) -> SpatialOmicsData:
         return load_paired_h5ad_dataset(*h5ad_pair)
 
     raise FileNotFoundError(
-        "Missing the paired Breast RNA/ADT data required by this tutorial. Run "
-        "`bash scripts/download_dgat_assets.sh --data-only --dataset Breast` and "
-        "`bash scripts/download_dgat_assets.sh --data-only --dataset Breast --check-only` "
+        "Missing the paired Tonsil RNA/ADT data required by this tutorial. Run "
+        "`bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil` and "
+        "`bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil --check-only` "
         "during Session 0, then rerun this notebook."
     )
 
@@ -46,14 +51,28 @@ def find_dgat_h5ad(data_dir: str | Path) -> Path | None:
 
 
 def find_dgat_h5ad_pair(data_dir: str | Path) -> tuple[Path, Path] | None:
-    """Find paired RNA and ADT/protein DGAT H5AD files."""
+    """Find the paired Tonsil RNA and ADT DGAT H5AD files used by this tutorial.
 
-    matches = [path for path in _find_h5ad_files(data_dir) if "breast" in path.name.lower()]
-    if len(matches) < 2:
+    Prefer exact ``Tonsil_RNA.h5ad`` / ``Tonsil_ADT.h5ad`` filenames and ignore
+    ``Tonsil_AddOns_*`` assets that share the same tissue label.
+    """
+
+    matches = _find_h5ad_files(data_dir)
+    if not matches:
         return None
 
-    transcript_files = [path for path in matches if _looks_like_transcript_h5ad(path)]
-    protein_files = [path for path in matches if _looks_like_protein_h5ad(path)]
+    by_name = {path.name: path for path in matches}
+    if TUTORIAL_RNA_FILENAME in by_name and TUTORIAL_ADT_FILENAME in by_name:
+        return by_name[TUTORIAL_RNA_FILENAME], by_name[TUTORIAL_ADT_FILENAME]
+
+    # Fallback: any non-AddOns Tonsil RNA/ADT pair under a shared directory.
+    tonsil_matches = [
+        path
+        for path in matches
+        if "tonsil" in path.name.lower() and "addons" not in path.name.lower()
+    ]
+    transcript_files = [path for path in tonsil_matches if _looks_like_transcript_h5ad(path)]
+    protein_files = [path for path in tonsil_matches if _looks_like_protein_h5ad(path)]
     if not transcript_files or not protein_files:
         return None
 
@@ -61,20 +80,30 @@ def find_dgat_h5ad_pair(data_dir: str | Path) -> tuple[Path, Path] | None:
 
 
 def _find_h5ad_files(data_dir: str | Path) -> list[Path]:
-    """Collect DGAT H5AD files from expected tutorial locations."""
+    """Collect DGAT H5AD files from the requested directory and, when applicable, tutorial assets."""
 
-    data_dir = Path(data_dir)
-    repo_root = data_dir.parents[1] if data_dir.name == "raw" and data_dir.parent.name == "data" else Path.cwd()
-    candidate_dirs = [
-        data_dir,
-        repo_root / "external" / "DGAT_assets" / "DGAT_prediction_ST_data",
-        repo_root / "external" / "DGAT_assets",
-        repo_root / "external" / "DGAT" / "DGAT_prediction_ST_data",
-    ]
-    matches = []
-    for candidate_dir in candidate_dirs:
-        if candidate_dir.exists():
-            matches.extend(sorted(candidate_dir.rglob("*.h5ad")))
+    data_dir = Path(data_dir).resolve()
+    matches: list[Path] = []
+    if data_dir.exists():
+        matches.extend(sorted(data_dir.rglob("*.h5ad")))
+
+    tutorial_root = None
+    for candidate in (data_dir, *data_dir.parents):
+        if (candidate / "src" / "dgat_tutorial").is_dir() and (candidate / "scripts").is_dir():
+            tutorial_root = candidate
+            break
+
+    # Only expand to ignored external asset folders when the caller is inside the tutorial tree.
+    # Temporary test directories must not silently resolve local organizer assets via Path.cwd().
+    if tutorial_root is not None and data_dir.is_relative_to(tutorial_root):
+        for candidate_dir in (
+            tutorial_root / "external" / "DGAT_assets" / "DGAT_prediction_ST_data",
+            tutorial_root / "external" / "DGAT_assets",
+            tutorial_root / "external" / "DGAT" / "DGAT_prediction_ST_data",
+        ):
+            if candidate_dir.exists():
+                matches.extend(sorted(candidate_dir.rglob("*.h5ad")))
+
     return sorted(set(matches), key=lambda path: str(path))
 
 
@@ -139,17 +168,29 @@ def load_paired_h5ad_dataset(transcript_path: str | Path, protein_path: str | Pa
     transcripts = _matrix_to_dataframe(transcript_adata)
     proteins = canonicalize_protein_columns(_matrix_to_dataframe(protein_adata))
 
-    common = spots.index.intersection(transcripts.index).intersection(proteins.index)
-    if common.empty:
-        raise ValueError(
-            f"No shared observations between {transcript_path} and {protein_path}. "
-            "Check that RNA and ADT files are from the same DGAT dataset."
-        )
+    from dgat_tutorial.alignment import require_exact_identifiers
+
+    require_exact_identifiers(
+        spots.index,
+        transcripts.index,
+        left_name=f"RNA spots ({transcript_path.name})",
+        right_name=f"RNA matrix ({transcript_path.name})",
+    )
+    require_exact_identifiers(
+        spots.index,
+        proteins.index,
+        left_name=f"RNA spots ({transcript_path.name})",
+        right_name=f"ADT spots ({protein_path.name})",
+    )
+    if not spots.index.equals(transcripts.index):
+        transcripts = transcripts.loc[spots.index]
+    if not spots.index.equals(proteins.index):
+        proteins = proteins.loc[spots.index]
 
     return SpatialOmicsData(
-        spots=spots.loc[common],
-        transcripts=transcripts.loc[common],
-        proteins=proteins.loc[common],
+        spots=spots,
+        transcripts=transcripts,
+        proteins=proteins,
     )
 
 
@@ -180,7 +221,7 @@ def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
         if _looks_like_protein_h5ad(path):
             raise ValueError(
                 f"{path} looks like an ADT/protein AnnData file. DGAT assets usually pair it with an RNA "
-                "AnnData file such as `Breast_RNA.h5ad`. Make sure both files are downloaded in the same "
+                "AnnData file such as `Tonsil_RNA.h5ad`. Make sure both files are downloaded in the same "
                 "asset directory."
             )
         raise ValueError(
@@ -251,9 +292,16 @@ def load_csv_dataset(data_dir: str | Path) -> SpatialOmicsData:
     transcripts = pd.read_csv(data_dir / "transcripts.csv", index_col=0)
     proteins = pd.read_csv(data_dir / "proteins.csv", index_col=0)
 
-    common = spots.index.intersection(transcripts.index).intersection(proteins.index)
+    from dgat_tutorial.alignment import require_exact_identifiers
+
+    require_exact_identifiers(spots.index, transcripts.index, left_name="spots.csv", right_name="transcripts.csv")
+    require_exact_identifiers(spots.index, proteins.index, left_name="spots.csv", right_name="proteins.csv")
+    if not spots.index.equals(transcripts.index):
+        transcripts = transcripts.loc[spots.index]
+    if not spots.index.equals(proteins.index):
+        proteins = proteins.loc[spots.index]
     return SpatialOmicsData(
-        spots=spots.loc[common],
-        transcripts=transcripts.loc[common],
-        proteins=proteins.loc[common],
+        spots=spots,
+        transcripts=transcripts,
+        proteins=proteins,
     )

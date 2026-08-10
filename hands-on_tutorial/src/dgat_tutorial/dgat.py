@@ -88,26 +88,40 @@ def write_prediction_artifact(
     method: str,
     source: str,
     evaluation_note: str,
+    extra_metadata: dict[str, object] | None = None,
 ) -> Path:
-    """Write predictions plus a small provenance sidecar used by Session 3."""
+    """Write predictions plus a provenance sidecar used by Session 3."""
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     predictions.to_csv(path)
     metadata_path = path.with_suffix(".metadata.json")
-    metadata_path.write_text(
-        json.dumps(
-            {
-                "method": method,
-                "source": source,
-                "evaluation_note": evaluation_note,
-                "rows": len(predictions),
-                "proteins": predictions.shape[1],
-            },
-            indent=2,
-        )
-        + "\n"
-    )
+    metadata: dict[str, object] = {
+        "method": method,
+        "source": source,
+        "evaluation_note": evaluation_note,
+        "rows": len(predictions),
+        "proteins": predictions.shape[1],
+        "protein_names": [str(name) for name in predictions.columns],
+        "hidden_dim": 1024,
+        "dropout_rate": 0.3,
+        "spatial_knn_k": 6,
+        "molecular_knn_k": 10,
+        "rna_pca_variance": 0.85,
+        "train_loss_weights": [5.0, 1.0, 1.0, 3.0, 1.0],
+        "preprocessing": {
+            "training_path": "qc_control_cytassist + normalize (MT/prevalence/CLR)",
+            "inference_path": "fill_genes + preprocess_ST (min_genes=700; RNA normalize/scale only)",
+            "min_genes": 700,
+            "max_mt_pct": 35,
+            "min_gene_prevalence": 0.025,
+            "rna": "normalize_total(1e4) → log1p → scale(max_value=10)",
+            "protein": "CLR (training / evaluation observations)",
+        },
+    }
+    if extra_metadata:
+        metadata.update(extra_metadata)
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
     return metadata_path
 
 
@@ -123,16 +137,20 @@ def load_prediction_metadata(path: str | Path) -> dict[str, object] | None:
 def run_official_dgat_prediction(
     rna_h5ad_path: str | Path,
     dgat_repo_dir: str | Path = "external/DGAT",
-    model_save_dir: str | Path = "external/DGAT_assets/DGAT_pretrained_models",
+    model_save_dir: str | Path = "external/DGAT_assets/model_weights",
     pyg_data_dir: str | Path = "data/processed/dgat_pyg",
     common_gene_path: str | Path | None = None,
     common_protein_path: str | Path | None = None,
 ) -> pd.DataFrame:
     """Run the official DGAT pretrained spatial protein prediction workflow.
 
-    This calls ``Model.Train_and_Predict.protein_predict`` from the official
-    DGAT repository. The returned prediction table has spots/cells as rows and
-    predicted proteins as columns.
+    Mirrors Demo3_Predict_ST.ipynb:
+
+    1. ``fill_genes`` — zero-fill missing common genes so the encoder width matches;
+    2. ``preprocess_ST`` — min_genes=700 + RNA normalize/scale (no MT / prevalence filter);
+    3. ``protein_predict`` — load pretrained RNA encoder + protein decoder.
+
+    The returned prediction table has spots/cells as rows and predicted proteins as columns.
     """
 
     rna_h5ad_path = Path(rna_h5ad_path)
@@ -187,33 +205,49 @@ def run_official_dgat_prediction(
 
     sys.path.insert(0, str(dgat_repo_dir.resolve()))
     try:
+        import torch
+
+        # Upstream Graph_utils.torch.load defaults break on PyTorch>=2.6 (weights_only=True).
+        # Official DGAT checkpoints/PyG graphs are trusted local artifacts from this workflow.
+        _original_torch_load = torch.load
+
+        def _torch_load_compat(*args, **kwargs):
+            kwargs.setdefault("weights_only", False)
+            return _original_torch_load(*args, **kwargs)
+
+        torch.load = _torch_load_compat  # type: ignore[assignment]
         train_and_predict = importlib.import_module("Model.Train_and_Predict")
+        preprocessing = importlib.import_module("utils.Preprocessing")
     except Exception as exc:
         raise ImportError(
-            "Could not import `Model.Train_and_Predict` from the official DGAT repository. "
+            "Could not import official DGAT modules (`Model.Train_and_Predict`, `utils.Preprocessing`). "
             "Check that DGAT dependencies are installed in this environment."
         ) from exc
 
     adata = ad.read_h5ad(rna_h5ad_path)
-    available_genes = [gene for gene in common_gene if gene in adata.var_names]
-    if not available_genes:
+    overlapping = sum(1 for gene in common_gene if gene in adata.var_names)
+    if overlapping == 0:
         raise ValueError(
             f"None of the genes in {common_gene_path} were found in {rna_h5ad_path}. "
             "Check that the common gene file matches the pretrained model."
         )
-    if len(available_genes) != len(common_gene):
-        missing = len(common_gene) - len(available_genes)
-        raise ValueError(
-            f"{missing} genes from {common_gene_path} were absent from {rna_h5ad_path}. "
-            "DGAT pretrained checkpoints are keyed by the exact common-gene count, so the RNA file, "
-            "common gene list, and model directory must match."
+    if overlapping < len(common_gene):
+        print(
+            f"Zero-filling {len(common_gene) - overlapping} missing genes via official fill_genes "
+            f"(encoder width stays {len(common_gene)})."
         )
-    adata = adata[:, available_genes].copy()
+    # Demo3 order: fill missing common genes, then ST QC + normalize/scale.
+    adata = preprocessing.fill_genes(adata, common_gene)
+    preprocessing.preprocess_ST(adata)
+    print(
+        f"Applied official ST inference prep (fill_genes + preprocess_ST) → "
+        f"{adata.n_obs} spots × {adata.n_vars} genes."
+    )
 
     pyg_data_dir.mkdir(parents=True, exist_ok=True)
     predictions = train_and_predict.protein_predict(
         adata,
-        available_genes,
+        common_gene,
         common_protein,
         str(model_save_dir),
         str(pyg_data_dir),

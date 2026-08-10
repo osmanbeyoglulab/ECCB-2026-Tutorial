@@ -1,11 +1,12 @@
 # Checkpoints
 
-Each notebook writes a JSON manifest here after its declared artifacts have been created.
+Each part within a session notebook writes a JSON manifest here after its declared artifacts have
+been created. Consolidating the notebooks does not change checkpoint IDs or artifact handoffs.
 
 ```text
 checkpoints/
 ├── session_01/part_1_1.json ... part_1_3.json
-├── session_02/part_2_1.json ... part_2_3.json
+├── session_02/part_2_1.json ... part_2_5.json
 └── session_03/part_3_1.json ... part_3_3.json
 ```
 

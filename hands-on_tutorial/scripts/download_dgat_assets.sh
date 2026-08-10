@@ -7,6 +7,8 @@ DATA_DIR="${ASSET_DIR}/data"
 MODEL_DIR="${ASSET_DIR}/model_weights"
 DATA_DRIVE_URL="https://drive.google.com/drive/folders/1OhsfCrHFMMjI8kNCKZRWShMHVhgCJo8C"
 MODEL_DRIVE_URL="https://drive.google.com/drive/folders/1uRYhgVgUpkhpE9VTtUB5YmU_hRsf69oD"
+TONSIL_ADT_ID="1uBKoU_tH3kPjjJaf--D-u4B5ljVpOlwR"
+TONSIL_RNA_ID="1tDYHTVdKfBYXIu6eznvsU16Qd4CnfWuW"
 BREAST_ADT_ID="1AP3rMXqVSkFM5-mFCdHtiVHwOJ_6CmCp"
 BREAST_RNA_ID="1NQ2YI2SlMerhro1QlyWb0JjiqxQ9Li3I"
 
@@ -29,10 +31,10 @@ DOWNLOAD_DATA=1
 DOWNLOAD_MODELS=1
 FORCE=0
 CHECK_ONLY=0
-DATASET=""
+DATASET="Tonsil"
 
 usage() {
-  echo "Usage: bash scripts/download_dgat_assets.sh [--data-only|--models-only] [--dataset Breast] [--force] [--check-only]"
+  echo "Usage: bash scripts/download_dgat_assets.sh [--data-only|--models-only] [--dataset Tonsil|Breast] [--force] [--check-only]"
 }
 
 while [ "$#" -gt 0 ]; do
@@ -49,8 +51,8 @@ while [ "$#" -gt 0 ]; do
         exit 2
       fi
       DATASET="$1"
-      if [ "${DATASET}" != "Breast" ]; then
-        echo "Only --dataset Breast is currently supported by the participant shortcut."
+      if [ "${DATASET}" != "Tonsil" ] && [ "${DATASET}" != "Breast" ]; then
+        echo "Supported participant shortcuts: --dataset Tonsil (default) or --dataset Breast."
         exit 2
       fi
       ;;
@@ -101,12 +103,18 @@ download_file() {
   else
     gdown "https://drive.google.com/uc?id=${file_id}" -O "${destination}"
   fi
+  if [ ! -s "${destination}" ]; then
+    echo "ERROR: failed to download ${label} (empty or missing: ${destination})."
+    exit 1
+  fi
 }
 
 has_data() {
   local filename
   local expected_files=("${EXPECTED_DATA_FILES[@]}")
-  if [ "${DATASET}" = "Breast" ]; then
+  if [ "${DATASET}" = "Tonsil" ]; then
+    expected_files=("Tonsil_ADT.h5ad" "Tonsil_RNA.h5ad")
+  elif [ "${DATASET}" = "Breast" ]; then
     expected_files=("Breast_ADT.h5ad" "Breast_RNA.h5ad")
   fi
   for filename in "${expected_files[@]}"; do
@@ -126,7 +134,9 @@ has_models() {
   return 1
 }
 
-if [ "${DATASET}" = "Breast" ] && [ "${DOWNLOAD_MODELS}" -eq 0 ]; then
+if [ "${DATASET}" = "Tonsil" ] && [ "${DOWNLOAD_MODELS}" -eq 0 ]; then
+  echo "The participant Tonsil download is about 350 MB (Tonsil_RNA + Tonsil_ADT)."
+elif [ "${DATASET}" = "Breast" ] && [ "${DOWNLOAD_MODELS}" -eq 0 ]; then
   echo "The participant Breast download is about 270 MB."
 else
   echo "DGAT assets are a large download (about 15 minutes on a fast workstation in one review)."
@@ -139,6 +149,9 @@ if [ "${CHECK_ONLY}" -eq 0 ]; then
   if [ "${DOWNLOAD_DATA}" -eq 1 ]; then
     if [ "${FORCE}" -eq 0 ] && has_data; then
       echo "Data assets already present; skipping download."
+    elif [ "${DATASET}" = "Tonsil" ]; then
+      download_file "Tonsil ADT data" "${TONSIL_ADT_ID}" "${DATA_DIR}/Tonsil_ADT.h5ad"
+      download_file "Tonsil RNA data" "${TONSIL_RNA_ID}" "${DATA_DIR}/Tonsil_RNA.h5ad"
     elif [ "${DATASET}" = "Breast" ]; then
       download_file "Breast ADT data" "${BREAST_ADT_ID}" "${DATA_DIR}/Breast_ADT.h5ad"
       download_file "Breast RNA data" "${BREAST_RNA_ID}" "${DATA_DIR}/Breast_RNA.h5ad"
@@ -169,7 +182,9 @@ if [ "${DOWNLOAD_DATA}" -eq 1 ]; then
     echo "WARNING: no .h5ad files found under ${DATA_DIR}"
   fi
   if has_data; then
-    if [ "${DATASET}" = "Breast" ]; then
+    if [ "${DATASET}" = "Tonsil" ]; then
+      echo "Both expected Tonsil DGAT data files are present."
+    elif [ "${DATASET}" = "Breast" ]; then
       echo "Both expected Breast DGAT data files are present."
     else
       echo "All ${#EXPECTED_DATA_FILES[@]} expected DGAT data files are present."
