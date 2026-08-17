@@ -20,8 +20,25 @@ Jupyter, DGAT, CUDA, or any Python packages on your laptop. A GPU is not require
 4. Wait for `Drive preparation complete: /content/drive/MyDrive/ECCB2026`.
 5. Keep `MyDrive/ECCB2026` in place. You may close the runtime after preparation.
 
-Notebook 0 automatically downloads and verifies the paired Tonsil files
-`Tonsil_RNA.h5ad` and `Tonsil_ADT.h5ad` (about 350 MB total). It also creates a wheel cache and
+### Opening Notebook 0 from the Colab home page
+
+The direct Notebook 0 link above is the quickest option. If you are starting from the
+[Google Colab home page](https://colab.research.google.com/), follow these steps instead:
+
+1. Select **Upload notebook** to open the notebook picker.
+
+   ![On the Colab home page, select Upload notebook.](assets/participant_setup/01_open_colab_notebook_picker.png)
+
+2. Select **GitHub**, paste
+   `https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial` into the search box, confirm that the
+   branch is **main**, and select
+   `hands-on_tutorial/notebooks/00_colab_setup.ipynb`.
+
+   ![In the Colab notebook picker, select GitHub, paste the tutorial repository URL, and select Notebook 00.](assets/participant_setup/02_select_notebook_00_from_github.png)
+
+Notebook 0 automatically downloads and verifies the 10x `V1_Human_Lymph_Node` filtered count
+matrix and spatial/H&E bundle, copies the tracked germinal-center annotation, and installs the
+organizer-validated precomputed DGAT prediction matrix. It also creates a wheel cache and
 persistent folders for processed data, results, figures, and checkpoints. Do not download or move
 these files manually.
 
@@ -56,6 +73,7 @@ is missing or incomplete.
   resume when supported.
 - **`ModuleNotFoundError: dgat_tutorial`:** rerun the first bootstrap cell in the current notebook.
 - **Runtime reset:** rerun only the bootstrap, then continue from the first unfinished checkpoint.
-- **Wrong dataset:** use the Tonsil participant workflow; do not substitute another sample.
+- **Wrong dataset:** use `V1_Human_Lymph_Node` throughout; Sessions 1–3 require matching RNA, GC-label, and prediction barcodes.
+- **Optional full inference:** use a GPU runtime and enable the clearly labeled flag in Session 2. It is not required for the participant workflow.
 
 Repository: <https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial>

@@ -93,14 +93,12 @@ def write_checkpoint(
 
 
 def preferred_prediction_path(paths: TutorialPaths) -> Path:
-    """Use a Session 2 checkpoint when present, otherwise the committed DGAT table."""
+    """Return the validated prediction handoff created in Session 2."""
 
     processed = paths.processed_data / "predicted_proteins.csv"
     if processed.is_file():
         return processed
-    committed = paths.raw_data / "dgat_predictions.csv"
-    if committed.is_file():
-        return committed
     raise FileNotFoundError(
-        "No prediction table found. Restore data/raw/dgat_predictions.csv or run Session 2, Part 4."
+        "No V1_Human_Lymph_Node prediction table found. Run the Session 2 precomputed-artifact checks before "
+        "evaluation. The legacy committed table is Tonsil-specific and is not reused."
     )

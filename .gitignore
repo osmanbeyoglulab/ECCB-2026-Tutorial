@@ -17,6 +17,9 @@ hands-on_tutorial/external/
 hands-on_tutorial/data/raw/*
 !hands-on_tutorial/data/raw/dgat_predictions.csv
 !hands-on_tutorial/data/raw/dgat_predictions.metadata.json
+!hands-on_tutorial/data/raw/V1_Human_Lymph_Node_manual_GC_annot.csv
+!hands-on_tutorial/data/raw/V1_Human_Lymph_Node_DGAT_predicted_proteins.csv
+!hands-on_tutorial/data/raw/V1_Human_Lymph_Node_DGAT_predicted_proteins.metadata.json
 hands-on_tutorial/data/processed/
 hands-on_tutorial/results/
 hands-on_tutorial/checkpoints/
@@ -31,12 +34,15 @@ hands-on_tutorial/models/
 
 # Developer test tree is not part of the public tutorial package
 hands-on_tutorial/tests/
+!hands-on_tutorial/tests/
+!hands-on_tutorial/tests/test_lymph_node_workflow.py
 
 # Office temporary files
 ~$*
 *.pptx
 
 # Local authoring and inspection artifacts (not participant materials)
+hands-on_tutorial/notebooks/organizer_generate_and_validate_lymph_node_predictions.ipynb
 .tmp_*
 *.inspect.ndjson
 output.png

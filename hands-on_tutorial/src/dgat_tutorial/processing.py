@@ -20,8 +20,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.neighbors import NearestNeighbors
 
 # Official DGAT defaults (utils/Preprocessing.py qc_control_cytassist + normalize).
 DGAT_MIN_GENES: int = 700
@@ -83,6 +81,12 @@ def process_modalities_official_dgat(
     it does not reproduce their filtering or normalization logic locally.
     """
 
+    if proteins is None:
+        raise ValueError(
+            "Paired DGAT training preprocessing requires observed protein measurements. "
+            "The V1_Human_Lymph_Node participant sample is transcript-only; use the "
+            "official `preprocess_ST` inference path instead."
+        )
     validate_modalities(spots, transcripts, proteins)
     try:
         import anndata as ad
@@ -149,7 +153,7 @@ def process_modalities_official_dgat(
 def validate_modalities(
     spots: pd.DataFrame,
     transcripts: pd.DataFrame,
-    proteins: pd.DataFrame,
+    proteins: pd.DataFrame | None,
 ) -> None:
     """Fail early when identifiers, coordinates, or measurement values are invalid."""
 
@@ -160,6 +164,11 @@ def validate_modalities(
     if not np.isfinite(coordinates).all():
         raise ValueError("Spatial x and y coordinates must be finite numeric values.")
 
+    if proteins is None:
+        raise ValueError(
+            "This operation requires paired protein measurements; the participant lymph-node "
+            "sample contains RNA only. Use transcript-only QC or DGAT inference helpers."
+        )
     for label, table in (("spots", spots), ("transcripts", transcripts), ("proteins", proteins)):
         if table.index.has_duplicates:
             raise ValueError(f"{label} contains duplicate observation IDs.")
@@ -213,6 +222,25 @@ def calculate_qc_metrics(transcripts: pd.DataFrame, proteins: pd.DataFrame) -> p
             "mt_pct": mt_pct,
             "protein_total": proteins.sum(axis=1),
             "proteins_detected": (proteins > 0).sum(axis=1),
+        },
+        index=transcripts.index,
+    )
+
+
+def calculate_rna_qc_metrics(transcripts: pd.DataFrame) -> pd.DataFrame:
+    """Calculate transcript-only spot QC without fabricating a protein modality."""
+
+    if transcripts.empty or transcripts.index.has_duplicates:
+        raise ValueError("Transcript matrix must be non-empty with unique spot IDs.")
+    rna_total = transcripts.sum(axis=1)
+    mt_columns = [column for column in transcripts.columns if _is_mt_gene(column)]
+    mt_counts = transcripts.loc[:, mt_columns].sum(axis=1) if mt_columns else 0.0
+    mt_pct = (mt_counts / rna_total.replace(0, np.nan) * 100.0).fillna(0.0)
+    return pd.DataFrame(
+        {
+            "rna_total": rna_total,
+            "genes_detected": (transcripts > 0).sum(axis=1),
+            "mt_pct": mt_pct,
         },
         index=transcripts.index,
     )
@@ -417,6 +445,11 @@ def process_modalities(
     ``preprocess_ST`` path used by the upstream pretrained inference workflow.
     """
 
+    if proteins is None:
+        raise ValueError(
+            "Paired DGAT training preprocessing requires observed proteins. Use `preprocess_ST` "
+            "for the transcript-only V1_Human_Lymph_Node participant sample."
+        )
     validate_modalities(spots, transcripts, proteins)
     if gene_to_keep_list is None:
         gene_to_keep_list = encoding_genes_for_proteins(transcripts.columns, proteins.columns)
@@ -453,6 +486,9 @@ def _build_knn_adjacency(
     variance: float = DGAT_RNA_PCA_VARIANCE,
 ) -> np.ndarray:
     """Build a directed kNN adjacency with self-loops (official ``build_knn_adj``)."""
+
+    from sklearn.decomposition import PCA
+    from sklearn.neighbors import NearestNeighbors
 
     matrix = np.asarray(features, dtype=float)
     if matrix.ndim != 2:
@@ -555,6 +591,8 @@ def knn_edge_index(coordinates: pd.DataFrame, n_neighbors: int = DGAT_SPATIAL_KN
     adds an identity term again. Encoders consume the **spatial ∪ molecular** union
     graphs from :func:`build_dgat_graphs`, not this spatial-only view.
     """
+
+    from sklearn.neighbors import NearestNeighbors
 
     xy = coordinates[["x", "y"]].to_numpy(dtype=float)
     n_obs = len(xy)

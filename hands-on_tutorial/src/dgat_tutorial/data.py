@@ -6,10 +6,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# Participant tutorial sample (official DGAT training-asset filenames).
-TUTORIAL_DATASET_NAME = "Tonsil"
-TUTORIAL_RNA_FILENAME = "Tonsil_RNA.h5ad"
-TUTORIAL_ADT_FILENAME = "Tonsil_ADT.h5ad"
+# Transcript-only participant sample used by the published DGAT lymph-node demo.
+TUTORIAL_DATASET_NAME = "V1_Human_Lymph_Node"
+TUTORIAL_MATRIX_FILENAME = "V1_Human_Lymph_Node_filtered_feature_bc_matrix.h5"
+TUTORIAL_SPATIAL_DIRNAME = "spatial"
+TUTORIAL_GC_FILENAME = "V1_Human_Lymph_Node_manual_GC_annot.csv"
 
 
 @dataclass(frozen=True)
@@ -18,27 +19,95 @@ class SpatialOmicsData:
 
     spots: pd.DataFrame
     transcripts: pd.DataFrame
-    proteins: pd.DataFrame
+    proteins: pd.DataFrame | None = None
+    image_path: Path | None = None
+    scale_factors: dict[str, float] | None = None
 
 
 def load_tutorial_data(data_dir: str | Path) -> SpatialOmicsData:
-    """Load the official paired Tonsil RNA and ADT AnnData files.
+    """Load the transcript-only 10x V1 human lymph-node Visium sample.
 
     The participant workflow intentionally has no generated-data substitute.
-    Missing or incomplete Tonsil assets stop with an actionable setup error.
+    Missing or incomplete lymph-node assets stop with an actionable setup error.
     """
 
     data_dir = Path(data_dir)
-    h5ad_pair = find_dgat_h5ad_pair(data_dir)
-    if h5ad_pair is not None:
-        return load_paired_h5ad_dataset(*h5ad_pair)
+    matrix_path = data_dir / TUTORIAL_MATRIX_FILENAME
+    spatial_dir = data_dir / TUTORIAL_SPATIAL_DIRNAME
+    if matrix_path.is_file() and spatial_dir.is_dir():
+        return load_10x_visium_dataset(matrix_path, spatial_dir)
 
     raise FileNotFoundError(
-        "Missing the paired Tonsil RNA/ADT data required by this tutorial. Run "
-        "`bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil` and "
-        "`bash scripts/download_dgat_assets.sh --data-only --dataset Tonsil --check-only` "
+        "Missing the 10x V1_Human_Lymph_Node data required by this tutorial. Run "
+        "`bash scripts/download_dgat_assets.sh --dataset V1_Human_Lymph_Node` and "
+        "`bash scripts/download_dgat_assets.sh --dataset V1_Human_Lymph_Node --check-only` "
         "during Session 0, then rerun this notebook."
     )
+
+
+def load_10x_visium_dataset(matrix_path: str | Path, spatial_dir: str | Path) -> SpatialOmicsData:
+    """Load the filtered GEX matrix, coordinates, and image metadata for 10x Visium."""
+
+    try:
+        import scanpy as sc
+    except ImportError as exc:
+        raise ImportError("Reading the lymph-node 10x matrix requires `scanpy`.") from exc
+
+    matrix_path = Path(matrix_path)
+    spatial_dir = Path(spatial_dir)
+    adata = sc.read_10x_h5(matrix_path, gex_only=True)
+    adata.var_names_make_unique()
+    positions_path = spatial_dir / "tissue_positions_list.csv"
+    if not positions_path.is_file():
+        positions_path = spatial_dir / "tissue_positions.csv"
+    if not positions_path.is_file():
+        raise FileNotFoundError(f"No tissue positions CSV was found under {spatial_dir}.")
+    positions = pd.read_csv(
+        positions_path,
+        header=None,
+        names=["barcode", "in_tissue", "array_row", "array_col", "pxl_row_in_fullres", "pxl_col_in_fullres"],
+        index_col="barcode",
+    )
+    positions.index = positions.index.astype(str)
+    positions = positions.loc[positions["in_tissue"].astype(int).eq(1)]
+    common = adata.obs_names.intersection(positions.index, sort=False)
+    if common.empty:
+        raise ValueError("The lymph-node count matrix and tissue-position file have no shared barcodes.")
+    adata = adata[common].copy()
+    positions = positions.loc[common]
+
+    spots = positions.copy()
+    spots["x"] = spots["pxl_col_in_fullres"].astype(float)
+    spots["y"] = spots["pxl_row_in_fullres"].astype(float)
+    import json
+
+    scale_path = spatial_dir / "scalefactors_json.json"
+    scale_factors = json.loads(scale_path.read_text()) if scale_path.is_file() else None
+    image_path = next(
+        (path for path in (spatial_dir / "tissue_hires_image.png", spatial_dir / "tissue_lowres_image.png") if path.is_file()),
+        None,
+    )
+    return SpatialOmicsData(
+        spots=spots,
+        transcripts=_matrix_to_dataframe(adata),
+        proteins=None,
+        image_path=image_path,
+        scale_factors=scale_factors,
+    )
+
+
+def load_gc_annotations(path: str | Path) -> pd.Series:
+    """Load the tracked list of manual germinal-center-positive barcodes."""
+
+    path = Path(path)
+    labels = pd.read_csv(path, index_col="Barcode")["GC"]
+    labels.index = labels.index.astype(str)
+    if labels.index.has_duplicates:
+        raise ValueError(f"{path} contains duplicate barcodes.")
+    unexpected = sorted(set(labels.dropna().astype(str)) - {"GC"})
+    if unexpected:
+        raise ValueError(f"Unexpected germinal-center labels in {path}: {unexpected}")
+    return labels.eq("GC").rename("germinal_center")
 
 
 def find_dgat_h5ad(data_dir: str | Path) -> Path | None:
@@ -51,28 +120,17 @@ def find_dgat_h5ad(data_dir: str | Path) -> Path | None:
 
 
 def find_dgat_h5ad_pair(data_dir: str | Path) -> tuple[Path, Path] | None:
-    """Find the paired Tonsil RNA and ADT DGAT H5AD files used by this tutorial.
+    """Find an optional paired RNA and ADT H5AD representation.
 
-    Prefer exact ``Tonsil_RNA.h5ad`` / ``Tonsil_ADT.h5ad`` filenames and ignore
-    ``Tonsil_AddOns_*`` assets that share the same tissue label.
+    Retained for paired-data examples outside the transcript-only participant path.
     """
 
     matches = _find_h5ad_files(data_dir)
     if not matches:
         return None
 
-    by_name = {path.name: path for path in matches}
-    if TUTORIAL_RNA_FILENAME in by_name and TUTORIAL_ADT_FILENAME in by_name:
-        return by_name[TUTORIAL_RNA_FILENAME], by_name[TUTORIAL_ADT_FILENAME]
-
-    # Fallback: any non-AddOns Tonsil RNA/ADT pair under a shared directory.
-    tonsil_matches = [
-        path
-        for path in matches
-        if "tonsil" in path.name.lower() and "addons" not in path.name.lower()
-    ]
-    transcript_files = [path for path in tonsil_matches if _looks_like_transcript_h5ad(path)]
-    protein_files = [path for path in tonsil_matches if _looks_like_protein_h5ad(path)]
+    transcript_files = [path for path in matches if _looks_like_transcript_h5ad(path)]
+    protein_files = [path for path in matches if _looks_like_protein_h5ad(path)]
     if not transcript_files or not protein_files:
         return None
 
@@ -221,7 +279,7 @@ def load_h5ad_dataset(path: str | Path) -> SpatialOmicsData:
         if _looks_like_protein_h5ad(path):
             raise ValueError(
                 f"{path} looks like an ADT/protein AnnData file. DGAT assets usually pair it with an RNA "
-                "AnnData file such as `Tonsil_RNA.h5ad`. Make sure both files are downloaded in the same "
+                "paired RNA AnnData file. Make sure both files are in the same "
                 "asset directory."
             )
         raise ValueError(

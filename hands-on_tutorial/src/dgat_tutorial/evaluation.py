@@ -142,6 +142,59 @@ def spatial_weights(coordinates: pd.DataFrame, radius: float | None = None) -> n
     return weights
 
 
+def symmetric_knn_weights(coordinates: pd.DataFrame, n_neighbors: int = 6):
+    """Build one symmetric binary kNN matrix shared by all tutorial Moran analyses."""
+
+    xy = coordinates[["x", "y"]].to_numpy(dtype=float)
+    if len(xy) < 2:
+        raise ValueError("At least two spots are required.")
+    if n_neighbors <= 0:
+        raise ValueError("n_neighbors must be positive.")
+    k = min(n_neighbors + 1, len(xy))
+    distance_squared = ((xy[:, None, :] - xy[None, :, :]) ** 2).sum(axis=2)
+    indices_with_self = np.argsort(distance_squared, axis=1, kind="stable")[:, :k]
+    indices = np.stack([row[row != spot][:n_neighbors] for spot, row in enumerate(indices_with_self)])
+    rows = np.repeat(np.arange(len(xy)), indices.shape[1])
+    cols = indices.reshape(-1)
+    weights = np.zeros((len(xy), len(xy)), dtype=np.uint8)
+    weights[rows, cols] = 1
+    return np.maximum(weights, weights.T)
+
+
+def morans_i_from_weights(values: pd.Series, weights: np.ndarray) -> float:
+    """Compute global Moran's I with an explicit, reusable weight matrix."""
+
+    x = values.to_numpy(dtype=float)
+    if weights.shape != (len(x), len(x)):
+        raise ValueError("weights shape must match the number of values.")
+    centered = x - x.mean()
+    denominator = float(centered @ centered)
+    weight_sum = float(weights.sum())
+    if denominator == 0.0 or weight_sum == 0.0:
+        return float("nan")
+    return float((len(x) / weight_sum) * ((centered @ (weights @ centered)) / denominator))
+
+
+def bivariate_morans_i_from_weights(
+    values_a: pd.Series, values_b: pd.Series, weights: np.ndarray
+) -> float:
+    """Compute symmetric bivariate Moran's I using one explicit spatial graph."""
+
+    a = values_a.to_numpy(dtype=float)
+    b = values_b.to_numpy(dtype=float)
+    if len(a) != len(b) or weights.shape != (len(a), len(a)):
+        raise ValueError("Aligned values and a matching square weight matrix are required.")
+    a = a - a.mean()
+    b = b - b.mean()
+    denominator = float(np.sqrt((a @ a) * (b @ b)))
+    weight_sum = float(weights.sum())
+    if denominator == 0.0 or weight_sum == 0.0:
+        return float("nan")
+    forward = float(a @ (weights @ b))
+    reverse = float(b @ (weights @ a))
+    return float((len(a) / weight_sum) * ((forward + reverse) / (2.0 * denominator)))
+
+
 def morans_i(values: pd.Series, coordinates: pd.DataFrame, radius: float | None = None) -> float:
     """Compute Moran's I for one spatial feature."""
 

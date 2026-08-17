@@ -1,0 +1,111 @@
+{
+  "artifact": "V1_Human_Lymph_Node_DGAT_predicted_proteins.csv",
+  "artifact_sha256": "bc7842b8f6271a420283b1c6cf1bdd8bcc292f86e8abb16007eead64ee4b1c7e",
+  "dataset": "V1_Human_Lymph_Node",
+  "source": "10x Genomics V1_Human_Lymph_Node transcript-only Visium",
+  "method": "official_dgat_protein_predict",
+  "dgat_repository": "https://github.com/osmanbeyoglulab/DGAT.git",
+  "dgat_commit": "b0128f342de70fa04546d27f9967eab1821f0933",
+  "tutorial_repository": "https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git",
+  "model_layout": "11535_gene_31_protein",
+  "model_note": "Downloadable 11,535-gene pretrained model; published Demo2 lymph-node notebook references a separate 17,434-gene demo model.",
+  "rows": 4009,
+  "proteins": 31,
+  "protein_names": [
+    "ACTA2",
+    "BCL2",
+    "CCR7",
+    "CD14",
+    "CD163",
+    "CD19",
+    "CD27",
+    "CD274",
+    "CD3E",
+    "CD4",
+    "CD40",
+    "CD68",
+    "CD8A",
+    "CEACAM8",
+    "CR2",
+    "CXCR5",
+    "EPCAM",
+    "FCGR3A",
+    "HLA_DRA",
+    "ITGAM",
+    "ITGAX",
+    "KRT5",
+    "MS4A1",
+    "PAX5",
+    "PCNA",
+    "PDCD1",
+    "PECAM1",
+    "PTPRC_1",
+    "PTPRC_2",
+    "SDC1",
+    "VIM"
+  ],
+  "spot_barcode_sha256": "2899626f3bdf38636bd43b4b781699a4cae0f12e4e866b9122bf50c3154cbb12",
+  "protein_identifier_sha256": "a453041c522bf272cb8f42b460baa52be599f926ec941588004f65a99c86b017",
+  "input_manifest": {
+    "data/V1_Human_Lymph_Node_filtered_feature_bc_matrix.h5": {
+      "bytes": 30736856,
+      "sha256": "86fd533eb907450e7125b9820183a0ca73776eeafcc5eddae5695b6aabfd9139"
+    },
+    "data/V1_Human_Lymph_Node_spatial.tar.gz": {
+      "bytes": 8246238,
+      "sha256": "812808883366ff9623dc8354847a7211b0d922b2bfc4c9359d6e12e993ea6a73"
+    },
+    "data/V1_Human_Lymph_Node_manual_GC_annot.csv": {
+      "bytes": 8327,
+      "sha256": "7e3f0d1d32fd95d51fe4ff66752e1850bc2717204359d62860c8bd966c80c8ba"
+    },
+    "DGAT_pretrained_models/11535_gene_31_protein/encoder_mRNA.pth": {
+      "bytes": 348667365,
+      "sha256": "ce23a47cd34fd5508402d6d0af919c96b39065ace1bb8042c59a4b15b679f4de"
+    },
+    "DGAT_pretrained_models/11535_gene_31_protein/decoder_protein.pth": {
+      "bytes": 4754733,
+      "sha256": "56c1a79e2feb72164917668bc39f6a3e4380d65d9edf481195a51544669f6ea8"
+    }
+  },
+  "barcode_contract": {
+    "expected_spots": 4009,
+    "prediction_spots": 4009,
+    "same_set": true,
+    "same_order": true,
+    "unique_predictions": true
+  },
+  "protein_contract": {
+    "expected_proteins": 31,
+    "prediction_proteins": 31,
+    "same_set": true,
+    "same_order": true,
+    "unique_predictions": true,
+    "required_markers_present": true
+  },
+  "removed_by_model_qc_count": 26,
+  "best_descriptive_gc_cluster": {
+    "cluster": "5",
+    "spots": 409,
+    "gc_overlap": 323,
+    "accuracy": 0.9660763282614119,
+    "precision": 0.7897310513447433,
+    "recall": 0.8659517426273459,
+    "f1": 0.8260869565217391
+  },
+  "published_gc_reference": {
+    "accuracy": 0.967,
+    "precision": 0.793,
+    "recall": 0.866,
+    "f1": 0.828
+  },
+  "evaluation_scope": "Indirect anatomical and spatial validation only; no measured lymph-node protein ground truth is available.",
+  "limitations": [
+    "Inferred proteins are predictions, not measurements.",
+    "GC overlap does not establish direct protein-level accuracy.",
+    "Spatial co-localization does not establish direct interaction or causality.",
+    "Low transcriptomic coverage can reduce prediction performance.",
+    "The best GC-associated cluster is selected and evaluated on the same sample."
+  ],
+  "benchmark_file": "runtime_memory_benchmark.json"
+}

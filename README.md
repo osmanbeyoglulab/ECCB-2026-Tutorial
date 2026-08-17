@@ -2,10 +2,11 @@
 
 This repository contains the participant materials for the ECCB 2026 tutorial on computational
 inference of spatial protein landscapes. The hands-on workflow runs in **Google Colab** using the
-10x Genomics CytAssist **Tonsil** paired RNA/ADT dataset.
+10x Genomics Visium **V1 Human Lymph Node** transcript-only dataset.
 
-Participants do not train DGAT during the workshop. The notebooks explain the architecture and
-losses, then load verified pretrained Tonsil predictions for evaluation and interpretation.
+Participants use organizer-validated precomputed DGAT predictions by default. Complete inference
+is available as an optional GPU reproducibility section; no measured lymph-node protein modality is
+used for direct accuracy evaluation.
 
 ## Start here
 
@@ -45,8 +46,8 @@ No local Python, Conda, Jupyter, CUDA, or GPU installation is required.
 | --- | --- |
 | 09:00–10:30 | Spatial omics technologies, protein inference, and DGAT |
 | 10:30–10:45 | Coffee break |
-| 10:45–11:15 | Session 1: Tonsil data, QC, normalization, and spatial context |
-| 11:15–11:40 | Session 2: DGAT architecture, losses, and pretrained predictions |
+| 10:45–11:15 | Session 1: lymph-node morphology, GC labels, and RNA QC |
+| 11:15–11:40 | Session 2: validated precomputed DGAT predictions |
 | 11:40–12:00 | Session 3: evaluation and interpretation |
 | 12:00–12:45 | Best practices, future directions, discussion, and wrap-up |
 
@@ -56,7 +57,7 @@ By the end of the tutorial, participants will be able to:
 
 - explain why RNA abundance does not always predict protein abundance;
 - describe how molecular and spatial graphs are used by DGAT;
-- validate and preprocess paired spatial RNA/protein measurements;
+- assess transcriptomic coverage for RNA-only spatial inference;
 - load and inspect pretrained spatial protein predictions;
-- evaluate predictions using pointwise and spatial diagnostics; and
+- evaluate predictions using anatomical and spatial diagnostics; and
 - recognize dataset shift, batch effects, missing cell types, and overinterpretation risks.

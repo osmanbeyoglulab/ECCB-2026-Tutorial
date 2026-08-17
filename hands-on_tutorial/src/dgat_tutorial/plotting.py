@@ -3,6 +3,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
 
@@ -14,6 +15,7 @@ def plot_spatial_feature(
     ax: plt.Axes | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
+    add_colorbar: bool = True,
 ) -> plt.Axes:
     """Scatter a molecular feature over spatial coordinates."""
 
@@ -31,10 +33,11 @@ def plot_spatial_feature(
         vmax=vmax,
     )
     ax.set_title(title)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    ax.set_xlabel("Tissue x coordinate")
+    ax.set_ylabel("Tissue y coordinate")
     ax.set_aspect("equal")
-    plt.colorbar(scatter, ax=ax, fraction=0.046, pad=0.04)
+    if add_colorbar:
+        plt.colorbar(scatter, ax=ax, fraction=0.046, pad=0.04)
     return ax
 
 
@@ -266,6 +269,127 @@ def plot_spatial_knn_graph(
         fontsize=12,
     )
     fig.tight_layout()
+    return fig, axes
+
+
+def plot_spatial_molecular_neighborhoods(
+    spots: pd.DataFrame,
+    spatial_edge_index: np.ndarray,
+    rna_molecular_edge_index: np.ndarray,
+    protein_molecular_edge_index: np.ndarray,
+    *,
+    focal_index: int | None = None,
+    focal_corner: str = "lower_left",
+) -> tuple[plt.Figure, np.ndarray]:
+    """Compare one spot's spatial, RNA, and protein neighborhoods on the tissue.
+
+    All three panels use the same focal node and coordinate limits. Self-loops are
+    omitted from the highlighted sets so each colored node represents another spot
+    linked to the focal spot through the corresponding directed graph.
+    """
+
+    if not {"x", "y"}.issubset(spots.columns):
+        raise ValueError("spots must contain x and y columns.")
+    xy = spots[["x", "y"]].to_numpy(dtype=float)
+    if len(xy) == 0:
+        raise ValueError("Cannot plot neighborhoods for an empty spot table.")
+
+    if focal_index is None:
+        _, _, _, _, tip = _choose_zoom_window(xy, target_nodes=70, corner=focal_corner)
+        focal_index = int(np.argmin(np.linalg.norm(xy - tip, axis=1)))
+    if not 0 <= focal_index < len(xy):
+        raise IndexError(f"focal_index={focal_index} is outside 0..{len(xy) - 1}.")
+
+    def outgoing_neighbors(edge_index: np.ndarray) -> np.ndarray:
+        directed = np.asarray(edge_index, dtype=int)
+        if directed.ndim != 2 or directed.shape[0] != 2:
+            raise ValueError("Each edge_index must have shape (2, number_of_edges).")
+        neighbors = directed[1, directed[0] == focal_index]
+        return np.unique(neighbors[neighbors != focal_index])
+
+    panels = [
+        ("Spatial neighborhood", spatial_edge_index, "#f0a202"),
+        ("RNA molecular neighborhood", rna_molecular_edge_index, "#4c78a8"),
+        ("Protein molecular neighborhood", protein_molecular_edge_index, "#59a14f"),
+    ]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.8), sharex=True, sharey=True)
+    for ax, (title, panel_edges, neighbor_color) in zip(axes, panels):
+        neighbors = outgoing_neighbors(panel_edges)
+        ax.scatter(
+            xy[:, 0],
+            xy[:, 1],
+            s=7,
+            color="#c7c7c7",
+            alpha=0.45,
+            linewidths=0,
+            zorder=1,
+        )
+        for neighbor in neighbors:
+            ax.plot(
+                [xy[focal_index, 0], xy[neighbor, 0]],
+                [xy[focal_index, 1], xy[neighbor, 1]],
+                color=neighbor_color,
+                linewidth=1.35,
+                alpha=0.8,
+                zorder=2,
+            )
+        if neighbors.size:
+            ax.scatter(
+                xy[neighbors, 0],
+                xy[neighbors, 1],
+                s=48,
+                color=neighbor_color,
+                edgecolors="white",
+                linewidths=0.65,
+                zorder=3,
+            )
+        ax.scatter(
+            xy[focal_index, 0],
+            xy[focal_index, 1],
+            s=95,
+            color="#c44e52",
+            edgecolors="white",
+            linewidths=0.9,
+            zorder=4,
+        )
+        ax.set(
+            title=f"{title}\n({len(neighbors)} other spots)",
+            xlabel="Tissue x coordinate",
+            aspect="equal",
+        )
+
+    axes[0].set_ylabel("Tissue y coordinate")
+    focal_label = str(spots.index[focal_index])
+    fig.suptitle(
+        f"One focal spot across DGAT neighborhood components: {focal_label}",
+        y=1.02,
+        fontsize=12,
+    )
+    fig.legend(
+        handles=[
+            Line2D(
+                [0], [0], marker="o", color="none", markerfacecolor="#c44e52",
+                markeredgecolor="white", markersize=9, label="same focal spot",
+            ),
+            Line2D(
+                [0], [0], marker="o", color="#f0a202", markerfacecolor="#f0a202",
+                markersize=7, label="spatial neighbor",
+            ),
+            Line2D(
+                [0], [0], marker="o", color="#4c78a8", markerfacecolor="#4c78a8",
+                markersize=7, label="RNA neighbor",
+            ),
+            Line2D(
+                [0], [0], marker="o", color="#59a14f", markerfacecolor="#59a14f",
+                markersize=7, label="protein neighbor",
+            ),
+        ],
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.01),
+        ncol=4,
+        frameon=False,
+    )
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
     return fig, axes
 
 
