@@ -6,11 +6,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# Transcript-only participant sample used by the published DGAT lymph-node demo.
-TUTORIAL_DATASET_NAME = "V1_Human_Lymph_Node"
-TUTORIAL_MATRIX_FILENAME = "V1_Human_Lymph_Node_filtered_feature_bc_matrix.h5"
-TUTORIAL_SPATIAL_DIRNAME = "spatial"
-TUTORIAL_GC_FILENAME = "V1_Human_Lymph_Node_manual_GC_annot.csv"
+# Sessions 1-2 use paired Tonsil RNA/ADT. Session 3 uses a separate,
+# transcript-only lymph-node sample for pretrained-model inference.
+TUTORIAL_DATASET_NAME = "Tonsil"
+TUTORIAL_RNA_FILENAME = "Tonsil_RNA.h5ad"
+TUTORIAL_ADT_FILENAME = "Tonsil_ADT.h5ad"
+LYMPH_NODE_DATASET_NAME = "V1_Human_Lymph_Node"
+LYMPH_NODE_MATRIX_FILENAME = "V1_Human_Lymph_Node_filtered_feature_bc_matrix.h5"
+LYMPH_NODE_SPATIAL_DIRNAME = "spatial"
+LYMPH_NODE_GC_FILENAME = "V1_Human_Lymph_Node_manual_GC_annot.csv"
 
 
 @dataclass(frozen=True)
@@ -25,15 +29,35 @@ class SpatialOmicsData:
 
 
 def load_tutorial_data(data_dir: str | Path) -> SpatialOmicsData:
-    """Load the transcript-only 10x V1 human lymph-node Visium sample.
+    """Load the paired Tonsil RNA/ADT sample used in Sessions 1-2.
 
     The participant workflow intentionally has no generated-data substitute.
-    Missing or incomplete lymph-node assets stop with an actionable setup error.
+    Missing or incomplete Tonsil assets stop with an actionable setup error.
     """
 
+    return load_tonsil_tutorial_data(data_dir)
+
+
+def load_tonsil_tutorial_data(data_dir: str | Path) -> SpatialOmicsData:
+    """Load the exact paired Tonsil files distributed for the tutorial."""
+
     data_dir = Path(data_dir)
-    matrix_path = data_dir / TUTORIAL_MATRIX_FILENAME
-    spatial_dir = data_dir / TUTORIAL_SPATIAL_DIRNAME
+    pair = find_dgat_h5ad_pair(data_dir)
+    if pair is not None:
+        return load_paired_h5ad_dataset(*pair)
+
+    raise FileNotFoundError(
+        "Missing paired Tonsil RNA/ADT files. Run Session 0 or "
+        "`bash scripts/download_dgat_assets.sh --dataset Tonsil`, then rerun this notebook."
+    )
+
+
+def load_lymph_node_tutorial_data(data_dir: str | Path) -> SpatialOmicsData:
+    """Load the transcript-only 10x lymph-node sample used in Session 3."""
+
+    data_dir = Path(data_dir)
+    matrix_path = data_dir / LYMPH_NODE_MATRIX_FILENAME
+    spatial_dir = data_dir / LYMPH_NODE_SPATIAL_DIRNAME
     if matrix_path.is_file() and spatial_dir.is_dir():
         return load_10x_visium_dataset(matrix_path, spatial_dir)
 
@@ -120,17 +144,22 @@ def find_dgat_h5ad(data_dir: str | Path) -> Path | None:
 
 
 def find_dgat_h5ad_pair(data_dir: str | Path) -> tuple[Path, Path] | None:
-    """Find an optional paired RNA and ADT H5AD representation.
-
-    Retained for paired-data examples outside the transcript-only participant path.
-    """
+    """Find paired Tonsil RNA and ADT files, preferring the exact release names."""
 
     matches = _find_h5ad_files(data_dir)
     if not matches:
         return None
 
-    transcript_files = [path for path in matches if _looks_like_transcript_h5ad(path)]
-    protein_files = [path for path in matches if _looks_like_protein_h5ad(path)]
+    by_name = {path.name: path for path in matches}
+    if TUTORIAL_RNA_FILENAME in by_name and TUTORIAL_ADT_FILENAME in by_name:
+        return by_name[TUTORIAL_RNA_FILENAME], by_name[TUTORIAL_ADT_FILENAME]
+
+    tonsil_matches = [
+        path for path in matches
+        if "tonsil" in path.name.lower() and "addons" not in path.name.lower()
+    ]
+    transcript_files = [path for path in tonsil_matches if _looks_like_transcript_h5ad(path)]
+    protein_files = [path for path in tonsil_matches if _looks_like_protein_h5ad(path)]
     if not transcript_files or not protein_files:
         return None
 

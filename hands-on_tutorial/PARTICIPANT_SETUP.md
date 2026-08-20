@@ -8,7 +8,7 @@ Jupyter, DGAT, CUDA, or any Python packages on your laptop. A GPU is not require
 - A laptop and charger
 - A current web browser
 - A Google account with access to Google Drive and Google Colab
-- At least 1 GB of free space in Google Drive
+- At least 3 GB of free space in Google Drive
 - A stable connection for the one-time dataset download
 - Your Google two-factor authentication method, if enabled
 
@@ -36,11 +36,19 @@ The direct Notebook 0 link above is the quickest option. If you are starting fro
 
    ![In the Colab notebook picker, select GitHub, paste the tutorial repository URL, and select Notebook 00.](assets/participant_setup/02_select_notebook_00_from_github.png)
 
-Notebook 0 automatically downloads and verifies the 10x `V1_Human_Lymph_Node` filtered count
-matrix and spatial/H&E bundle, copies the tracked germinal-center annotation, and installs the
-organizer-validated precomputed DGAT prediction matrix. It also creates a wheel cache and
-persistent folders for processed data, results, figures, and checkpoints. Do not download or move
-these files manually.
+Notebook 0 automatically downloads and verifies both tutorial datasets: paired Tonsil RNA/ADT for
+Sessions 1–2, and the 10x `V1_Human_Lymph_Node` count matrix and spatial/H&E bundle for Session 3.
+It also installs the tracked germinal-center annotation and organizer-validated lymph-node DGAT
+prediction matrix, creates a wheel cache, and prepares persistent result and checkpoint folders.
+Do not download or move these files manually.
+
+Approximate preparation time is 5–10 minutes on a typical connection. For planning, allow 5–15
+minutes each for Sessions 1–2 and 3–5 minutes for the default Session 3 analysis on a standard
+free-tier CPU runtime (typically about 12 GB system RAM); no GPU memory is used. Sessions 1–2 write
+large processed Tonsil matrices to Drive, which is why at least 3 GB of free space is recommended.
+The optional full lymph-node inference rerun downloads about 350 MB of weights; allow approximately
+15–30 minutes including setup on a GPU runtime with at least 12 GB system RAM and 8 GB GPU RAM.
+These are planning estimates, and Colab hardware and runtime availability vary.
 
 ## During the workshop
 
@@ -52,8 +60,9 @@ Files pane; that pane may show a source preview instead of an executable noteboo
 3. [Notebook 3 — Evaluation and interpretation](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb)
 
 Run the first bootstrap cell whenever a notebook receives a new runtime. It mounts Drive,
-refreshes the tutorial checkout, copies the prepared dataset to fast local storage, installs only
-missing packages, and reconnects your saved checkpoints.
+refreshes the tutorial checkout, copies only the dataset required by that notebook to fast local
+storage, installs the pinned packages, and reconnects saved checkpoints. Sessions 1–2 copy Tonsil;
+Session 3 independently copies lymph node.
 
 ## If the runtime disconnects
 
@@ -73,7 +82,11 @@ is missing or incomplete.
   resume when supported.
 - **`ModuleNotFoundError: dgat_tutorial`:** rerun the first bootstrap cell in the current notebook.
 - **Runtime reset:** rerun only the bootstrap, then continue from the first unfinished checkpoint.
-- **Wrong dataset:** use `V1_Human_Lymph_Node` throughout; Sessions 1–3 require matching RNA, GC-label, and prediction barcodes.
-- **Optional full inference:** use a GPU runtime and enable the clearly labeled flag in Session 2. It is not required for the participant workflow.
+- **Wrong dataset:** Sessions 1–2 require paired `Tonsil_RNA.h5ad` and `Tonsil_ADT.h5ad`;
+  Session 3 requires `V1_Human_Lymph_Node` RNA, spatial, GC-label, and prediction assets.
+- **`muon`/`mudata` import error:** rerun the first bootstrap cell so the compatible pinned versions
+  are installed, then restart the runtime if Colab requests it.
+- **Optional full inference:** use a GPU runtime and enable the clearly labeled flag at the end of
+  Session 3. It is not required for the participant workflow.
 
 Repository: <https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial>

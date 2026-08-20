@@ -33,7 +33,7 @@ troubleshooting instructions are in the
 - A laptop and charger
 - A current web browser
 - A Google account with Google Drive access
-- At least 1 GB of free Google Drive space
+- At least 3 GB of free Google Drive space
 - A stable connection for the one-time pre-workshop download
 
 No local Python, Conda, Jupyter, CUDA, or GPU installation is required.
@@ -53,8 +53,8 @@ No local Python, Conda, Jupyter, CUDA, or GPU installation is required.
 | 09:15–10:00 | Spatial omics technologies |
 | 10:00–10:30 | Computational protein inference and DGAT |
 | 10:30–10:45 | Coffee break |
-| 10:45–11:15 | Hands-on Session 1: lymph-node morphology, GC labels, and RNA QC |
-| 11:15–11:40 | Hands-on Session 2: validated precomputed DGAT predictions |
-| 11:40–12:00 | Hands-on Session 3: evaluation and interpretation |
+| 10:45–11:15 | Hands-on Session 1: paired Tonsil RNA/protein preparation and spatial context |
+| 11:15–11:40 | Hands-on Session 2: DGAT model and Tonsil predictions |
+| 11:40–12:00 | Hands-on Session 3: lymph-node inference, evaluation, and interpretation |
 | 12:00–12:20 | Best practices and future directions |
 | 12:20–12:45 | Discussion and wrap-up |

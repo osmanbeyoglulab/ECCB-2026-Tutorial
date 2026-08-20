@@ -93,12 +93,12 @@ def write_checkpoint(
 
 
 def preferred_prediction_path(paths: TutorialPaths) -> Path:
-    """Return the validated prediction handoff created in Session 2."""
+    """Return the Tonsil prediction handoff created in Session 2."""
 
     processed = paths.processed_data / "predicted_proteins.csv"
     if processed.is_file():
         return processed
-    raise FileNotFoundError(
-        "No V1_Human_Lymph_Node prediction table found. Run the Session 2 precomputed-artifact checks before "
-        "evaluation. The legacy committed table is Tonsil-specific and is not reused."
-    )
+    tracked = paths.raw_data / "dgat_predictions.csv"
+    if tracked.is_file():
+        return tracked
+    raise FileNotFoundError("No Tonsil prediction table found. Run Session 2 first.")

@@ -34,14 +34,13 @@ hands-on_tutorial/models/
 
 # Developer test tree is not part of the public tutorial package
 hands-on_tutorial/tests/
-!hands-on_tutorial/tests/
-!hands-on_tutorial/tests/test_lymph_node_workflow.py
 
 # Office temporary files
 ~$*
 *.pptx
 
 # Local authoring and inspection artifacts (not participant materials)
+*.pages
 hands-on_tutorial/notebooks/organizer_generate_and_validate_lymph_node_predictions.ipynb
 .tmp_*
 *.inspect.ndjson
@@ -49,5 +48,5 @@ output.png
 build_presenter_script.py
 DGAT_ECCB_Tutorial_Presenter_Script.docx
 DGAT_ECCB_Tutorial_Presenter_Script.pages
-ECCB_2026_DGAT_Participant_Email.docx
-ECCB_2026_DGAT_Participant_Email.pdf
+ECCB_2026_DGAT_Internal_*
+ECCB_2026_DGAT_Participant_Email*
