@@ -2,8 +2,6 @@
 
 This repository contains the lecture slides and hands-on materials for the ECCB 2026 tutorial on computational inference of spatial protein landscapes. The tutorial introduces spatial transcriptomics, spatial proteomics, and multimodal technologies; examines why spatial context matters for transcript-to-protein prediction; and presents the assumptions, evaluation strategies, and common pitfalls associated with computational protein inference.
 
-The hands-on workflow runs in **Google Colab** using the 10x Genomics Visium **V1 Human Lymph Node** transcript-only dataset. Participants use organizer-validated precomputed DGAT predictions by default. Complete inference is available as an optional GPU reproducibility section; no measured lymph-node protein modality is used for direct accuracy evaluation.
-
 By the end of the tutorial, participants will be able to:
 
 - Explain why protein abundance cannot always be inferred directly from RNA expression.
