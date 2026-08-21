@@ -1,26 +1,25 @@
-# Participant preparation
+# Participant Preparation
 
-Welcome to the ECCB 2026 tutorial on **Computational inference of spatial protein landscapes:
-methods, assumptions and pitfalls**. The hands-on workflow uses paired Tonsil RNA and measured
-protein data in Sessions 1–2, followed by a transcript-only 10x Visium human lymph-node inference
-and interpretation example in Session 3.
+Welcome to the ECCB 2026 tutorial, **Computational Inference of Spatial Protein Landscapes: Methods, Assumptions, and Pitfalls**.
 
-> **Important:** Complete [Notebook 0 — Prepare Google Drive](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/00_colab_setup.ipynb)
-> before the tutorial. Run every cell and keep the prepared `ECCB2026` folder in Google Drive.
+The hands-on tutorial demonstrates two stages of the DGAT workflow:
 
-The tutorial runs in **Google Colab**. You do not need to install Python, Conda, Jupyter, DGAT,
-CUDA, or any Python packages on your laptop. A GPU is not required for the default participant
-workflow. Session 3 includes full lymph-node inference only as an optional GPU reproducibility
-section.
+- **Model training and evaluation:** Sessions 1–2 use paired human tonsil data generated with the **10x Genomics Visium CytAssist Gene and Protein Expression platform**. The dataset contains spatially matched RNA expression and antibody-derived tag (ADT) measurements for 31 proteins.
+- **Protein inference and interpretation:** Session 3 uses the transcriptome-only **10x Genomics Visium human lymph node** sample (`V1_Human_Lymph_Node`) to infer spatial protein abundance with a pretrained DGAT model.
+
+> **Important:** Complete [Notebook 0 — Prepare Google Drive](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/00_colab_setup.ipynb) before the tutorial. Run every cell and keep the prepared `ECCB2026` folder in Google Drive.
+
+The tutorial runs entirely in **Google Colab**. You do not need to install Python, Conda, Jupyter, DGAT, CUDA, or any Python packages on your laptop. A GPU is not required for the default participant workflow. Session 3 includes full lymph node inference as an optional GPU-based reproducibility exercise.
 
 ## What to prepare
 
 - A laptop with a current version of Chrome, Safari, Firefox, or Edge
 - A Google account with access to Google Drive and Google Colab
 - At least 3 GB of free space in Google Drive
-- A stable connection for the one-time dataset download
-- Your laptop charger; a mouse is optional but useful for notebook navigation
+- A stable internet connection for the initial data download
+- Your laptop charger
 - Your Google two-factor authentication method, if enabled
+- A mouse, if desired, for easier notebook navigation
 
 ## Complete this once before the tutorial
 
