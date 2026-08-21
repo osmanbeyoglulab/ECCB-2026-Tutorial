@@ -1,8 +1,9 @@
 # Hands-on Tutorial: Inferring Spatial Protein Landscapes with DGAT
 
-The participant workflow uses four restart-safe Google Colab notebooks and two complementary
-examples: paired **Tonsil RNA/ADT** for Sessions 1–2, followed by the transcript-only 10x Visium
-**human lymph node** sample (`V1_Human_Lymph_Node`) in Session 3.
+The participant workflow consists of four restart-safe Google Colab notebooks using two complementary 10x Genomics spatial datasets. 
+Sessions 1–2 use paired human tonsil RNA and antibody-derived tag (ADT) data generated with the 10x Genomics Visium CytAssist Gene and Protein Expression platform. 
+The matched RNA and 31-protein measurements are used to train DGAT and evaluate its protein predictions. 
+Session 3 uses the transcriptome-only 10x Genomics Visium human lymph node sample (V1_Human_Lymph_Node) to demonstrate spatial protein inference with a pretrained DGAT model.
 
 ## Notebook order
 
