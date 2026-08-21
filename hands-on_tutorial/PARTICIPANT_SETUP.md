@@ -53,9 +53,8 @@ The direct Notebook 0 link above is the quickest option. If you are starting fro
 
 ## What Notebook 0 prepares
 
-- The paired Tonsil RNA and measured ADT files used in Sessions 1–2
-- The 10x `V1_Human_Lymph_Node` count matrix and spatial/H&E bundle, tracked germinal-center
-  annotation, and organizer-validated precomputed DGAT prediction matrix used in Session 3
+- Paired human tonsil RNA and measured 31-protein ADT data generated with the 10x Genomics Visium CytAssist Gene and Protein Expression platform and used for DGAT training and evaluation in Sessions 1–2
+- The transcriptome-only 10x Genomics Visium human lymph node (V1_Human_Lymph_Node) gene-expression matrix, spatial coordinates, H&E image, manual germinal center annotations, and organizer-generated precomputed 31-protein DGAT prediction matrix used in Session 3
 - A combined asset manifest containing dataset roles, file sizes, and SHA-256 checksums
 - A Python wheel cache matched to the selected Colab/Python version, reducing later package setup
   time
@@ -77,14 +76,11 @@ Open notebooks with the direct links below. Do not open `.ipynb` files from Cola
 Files pane; that pane may show a source preview instead of an executable notebook.
 
 1. [Session 1 — Data and spatial context](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/01_data_and_spatial.ipynb):
-   paired Tonsil RNA/ADT quality control, normalization, spatial neighborhoods, and exploratory
-   structure
+   quality control and normalization of paired tonsil RNA and 31-protein ADT measurements, followed by exploration of spatial neighborhoods and multimodal structure
 2. [Session 2 — Model and predictions](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb):
-   paired Tonsil graph construction, DGAT architecture and objective, and validated Tonsil
-   predictions
+   molecular-similarity and spatial-neighborhood graph construction, DGAT architecture and training objective, model training, and direct comparison of predicted proteins with measured tonsil ADT values
 3. [Session 3 — Lymph-node inference and interpretation](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb):
-   validated precomputed predictions, germinal-center-associated marker maps and clusters, and
-   spatial coherence
+   organizer-generated precomputed protein predictions, germinal center–associated protein maps and clusters, and spatial autocorrelation analyses. Because the human lymph node dataset lacks measured protein data, these analyses provide indirect biological evaluation rather than direct protein-level validation.
 
 Run the first bootstrap cell whenever a notebook receives a new runtime. It mounts Drive,
 refreshes the tutorial checkout, copies only the dataset required by that notebook to fast local
@@ -113,8 +109,7 @@ is missing or incomplete.
   Session 3 requires `V1_Human_Lymph_Node` RNA, spatial, GC-label, and prediction assets.
 - **`muon`/`mudata` import error:** rerun the first bootstrap cell so the compatible pinned versions
   are installed, then restart the runtime if Colab requests it.
-- **Optional full inference:** use a GPU runtime and enable the clearly labeled flag at the end of
-  Session 3. It is not required for the participant workflow.
+- **Optional full inference:** use a GPU runtime and enable the clearly labeled flag at the end of Session 3. Full inference is not required for the default participant workflow
 
 ## Useful links
 
