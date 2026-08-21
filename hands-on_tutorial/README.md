@@ -26,9 +26,9 @@ If the runtime disconnects, reopen the same notebook, rerun its first cell, and 
 
 - **Human tonsil, Sessions 1–2:** The 10x Genomics Visium CytAssist Gene and Protein Expression dataset provides spatially matched RNA expression and experimentally measured ADT abundance for 31 proteins. These paired data support multimodal quality control and preprocessing, graph construction, DGAT model training, and direct evaluation of predicted proteins against measured protein abundance.
 - **Human lymph node, Session 3:** The transcriptome-only 10x Genomics Visium dataset provides gene-expression counts, spatial coordinates, an H&E image, and manual GC annotations but no measured protein data. These inputs are analyzed with an organizer-generated matrix containing DGAT-inferred spatial abundance for the same 31-protein panel.
-**Default inference path:** Session 3 verifies and loads the organizer-generated predictions for downstream spatial analysis. This workflow is designed to run on a free-tier CPU runtime.
-**Optional reproducibility path:** At the end of Session 3, participants can download the released model weights and rerun the complete protein-inference workflow using a GPU runtime.
-**The lymph-node sample** has no measured protein modality. Its GC overlap and Moran analyses are
+- **Default inference path:** Session 3 verifies and loads the organizer-generated predictions for downstream spatial analysis. This workflow is designed to run on a free-tier CPU runtime.
+- **Optional reproducibility path:** At the end of Session 3, participants can download the released model weights and rerun the complete protein-inference workflow using a GPU runtime.
+- **The lymph-node sample** has no measured protein modality. Its GC overlap and Moran analyses are
 therefore **indirect biological evaluation**, not direct protein-level validation. Inferred proteins
 remain model predictions, and spatial co-localization does not establish molecular interaction or
 causality.
