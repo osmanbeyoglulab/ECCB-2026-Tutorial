@@ -1,4 +1,4 @@
-# DGAT hands-on tutorial
+# Hands-on Tutorial: Inferring Spatial Protein Landscapes with DGAT
 
 The participant workflow uses four restart-safe Google Colab notebooks and two complementary
 examples: paired **Tonsil RNA/ADT** for Sessions 1–2, followed by the transcript-only 10x Visium
