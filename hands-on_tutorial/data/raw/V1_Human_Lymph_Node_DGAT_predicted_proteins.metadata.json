@@ -4,6 +4,8 @@
   "dataset": "V1_Human_Lymph_Node",
   "source": "10x Genomics V1_Human_Lymph_Node transcript-only Visium",
   "method": "official_dgat_protein_predict",
+  "inference_preprocessing": "fill_genes → preprocess_ST → protein_predict",
+  "preprocessing_order_note": "This is the order used to generate the distributed 4,009-row artifact and the order shown in the released general ST workflow (Demo3_Predict_ST.ipynb). The released lymph-node Demo2_Predict.ipynb shows preprocess_ST before fill_genes and would retain 4,014 spots for this raw matrix.",
   "dgat_repository": "https://github.com/osmanbeyoglulab/DGAT.git",
   "dgat_commit": "b0128f342de70fa04546d27f9967eab1821f0933",
   "tutorial_repository": "https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git",
@@ -84,14 +86,24 @@
     "required_markers_present": true
   },
   "removed_by_model_qc_count": 26,
+  "clustering_contract": {
+    "input": "31-column predicted-protein matrix directly; no additional standardization or PCA",
+    "n_neighbors": 10,
+    "resolution": 0.25,
+    "random_seed": 0,
+    "backend": "leidenalg",
+    "n_iterations": -1,
+    "use_rep": "X",
+    "cluster_selection": "score every Leiden cluster as the positive GC call and select the largest F1"
+  },
   "best_descriptive_gc_cluster": {
-    "cluster": "5",
-    "spots": 409,
-    "gc_overlap": 323,
-    "accuracy": 0.9660763282614119,
-    "precision": 0.7897310513447433,
-    "recall": 0.8659517426273459,
-    "f1": 0.8260869565217391
+    "cluster": "4",
+    "spots": 410,
+    "gc_overlap": 325,
+    "accuracy": 0.966824644549763,
+    "precision": 0.7926829268292683,
+    "recall": 0.871313672922252,
+    "f1": 0.8301404853128991
   },
   "published_gc_reference": {
     "accuracy": 0.967,
