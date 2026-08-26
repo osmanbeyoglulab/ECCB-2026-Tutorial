@@ -275,17 +275,18 @@ def plot_spatial_knn_graph(
 def plot_spatial_molecular_neighborhoods(
     spots: pd.DataFrame,
     spatial_edge_index: np.ndarray,
-    rna_molecular_edge_index: np.ndarray,
-    protein_molecular_edge_index: np.ndarray,
+    rna_edge_index: np.ndarray,
+    protein_edge_index: np.ndarray,
     *,
     focal_index: int | None = None,
     focal_corner: str = "lower_left",
 ) -> tuple[plt.Figure, np.ndarray]:
-    """Compare one spot's spatial, RNA, and protein neighborhoods on the tissue.
+    """Compare one spot's spatial, RNA-encoder, and protein-encoder neighborhoods.
 
-    All three panels use the same focal node and coordinate limits. Self-loops are
-    omitted from the highlighted sets so each colored node represents another spot
-    linked to the focal spot through the corresponding directed graph.
+    The RNA and protein edge indices are the actual DGAT encoder graphs: each is the
+    union of spatial and modality-specific molecular edges. All panels use the same
+    focal node and tissue coordinates. Self-loops are omitted from the highlighted
+    sets so each colored node represents another spot linked to the focal spot.
     """
 
     if not {"x", "y"}.issubset(spots.columns):
@@ -308,9 +309,9 @@ def plot_spatial_molecular_neighborhoods(
         return np.unique(neighbors[neighbors != focal_index])
 
     panels = [
-        ("Spatial neighborhood", spatial_edge_index, "#f0a202"),
-        ("RNA molecular neighborhood", rna_molecular_edge_index, "#4c78a8"),
-        ("Protein molecular neighborhood", protein_molecular_edge_index, "#59a14f"),
+        ("Spatial graph (6-NN)", spatial_edge_index, "#f0a202"),
+        ("RNA graph (spatial ∪ molecular)", rna_edge_index, "#4c78a8"),
+        ("Protein graph (spatial ∪ molecular)", protein_edge_index, "#59a14f"),
     ]
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.8), sharex=True, sharey=True)
     for ax, (title, panel_edges, neighbor_color) in zip(axes, panels):
@@ -361,7 +362,7 @@ def plot_spatial_molecular_neighborhoods(
     axes[0].set_ylabel("Tissue y coordinate")
     focal_label = str(spots.index[focal_index])
     fig.suptitle(
-        f"One focal spot across DGAT neighborhood components: {focal_label}",
+        f"Same focal spot across the three DGAT graphs: {focal_label}",
         y=1.02,
         fontsize=12,
     )
