@@ -21,7 +21,7 @@ Complete Notebook 0 before the workshop, then open one notebook per teaching ses
 | --- | --- | --- |
 | Pre-work | `00_colab_setup.ipynb` | [Prepare Google Drive](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/00_colab_setup.ipynb) |
 | Session 1 | `01_data_and_spatial.ipynb` | [Data and spatial context](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/01_data_and_spatial.ipynb) |
-| Session 2 | `02_model_and_predictions.ipynb` | [Model and predictions](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb) |
+| Session 2 | `02_model_and_predictions.ipynb` | [DGAT paired training and RNA-only inference](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb) |
 | Session 3 | `03_evaluation_and_interpretation.ipynb` | [Evaluation and interpretation](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb) |
 
 Use Colab runtime version **2026.04 (Python 3.12)** for all four notebooks. Full preparation and

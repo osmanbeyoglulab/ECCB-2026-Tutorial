@@ -2,7 +2,7 @@
 
 The participant workflow consists of four restart-safe Google Colab notebooks using two complementary 10x Genomics spatial datasets. 
 Sessions 1–2 use paired human tonsil RNA and antibody-derived tag (ADT) data generated with the 10x Genomics Visium CytAssist Gene and Protein Expression platform. 
-The matched RNA and 31-protein measurements are used to train DGAT and evaluate its protein predictions. 
+The matched RNA and 31-protein measurements illustrate DGAT's paired-training inputs, architecture, and objective; the workshop does not retrain the complete model.
 Session 3 uses the transcriptome-only 10x Genomics Visium human lymph node sample (V1_Human_Lymph_Node) to demonstrate spatial protein inference with a pretrained DGAT model.
 
 ## Notebook order
@@ -11,7 +11,7 @@ Session 3 uses the transcriptome-only 10x Genomics Visium human lymph node sampl
 | --- | --- | --- |
 | 0 | Prepare Google Drive and the workshop environment | [Open Notebook 0](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/00_colab_setup.ipynb) |
 | 1 | Prepare and explore matched spatial RNA and 31-protein ADT measurements | [Open Notebook 1](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/01_data_and_spatial.ipynb) |
-| 2 | Construct the molecular-similarity and spatial-neighborhood graphs, train DGAT, and compare predicted proteins with measured ADT values | [Open Notebook 2](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb) |
+| 2 | Understand DGAT paired training, trace the retained RNA-only inference pathway, and prepare the fixed gene ordering required for Session 3 | [Open Notebook 2](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb) |
 | 3 | Apply pretrained DGAT to infer 31 spatial protein profiles and interpret germinal center–associated patterns | [Open Notebook 3](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb) |
 
 Use Colab runtime version **2026.04 (Python 3.12)** throughout. Complete Notebook 0 before the workshop, then run Notebooks 1–3 in sequence.
@@ -24,7 +24,7 @@ If the runtime disconnects, reopen the same notebook, rerun its first cell, and 
 
 ## Dataset roles
 
-- **Human tonsil, Sessions 1–2:** The 10x Genomics Visium CytAssist Gene and Protein Expression dataset provides spatially matched RNA expression and experimentally measured ADT abundance for 31 proteins. These paired data support multimodal quality control and preprocessing, graph construction, DGAT model training, and direct evaluation of predicted proteins against measured protein abundance.
+- **Human tonsil, Sessions 1–2:** The 10x Genomics Visium CytAssist Gene and Protein Expression dataset provides spatially matched RNA expression and experimentally measured ADT abundance for 31 proteins. These paired data support multimodal quality control, preprocessing, graph construction, and explanation of DGAT's paired-training workflow; the workshop does not retrain the complete model.
 - **Human lymph node, Session 3:** The transcriptome-only 10x Genomics Visium dataset provides gene-expression counts, spatial coordinates, an H&E image, and manual GC annotations but no measured protein data. These inputs are analyzed with an organizer-generated matrix containing DGAT-inferred spatial abundance for the same 31-protein panel.
 - **Default inference path:** Session 3 verifies and loads the organizer-generated predictions for downstream spatial analysis. This workflow is designed to run on a free-tier CPU runtime.
 - **Optional reproducibility path:** At the end of Session 3, participants can download the released model weights and rerun the complete protein-inference workflow using a GPU runtime.

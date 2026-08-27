@@ -77,8 +77,8 @@ Files pane; that pane may show a source preview instead of an executable noteboo
 
 1. [Session 1 — Data and spatial context](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/01_data_and_spatial.ipynb):
    quality control and normalization of paired tonsil RNA and 31-protein ADT measurements, followed by exploration of spatial neighborhoods and multimodal structure
-2. [Session 2 — Model and predictions](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb):
-   molecular-similarity and spatial-neighborhood graph construction, DGAT architecture and training objective, model training, and direct comparison of predicted proteins with measured tonsil ADT values
+2. [Session 2 — Understand DGAT Paired Training and RNA-Only Inference](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb):
+   paired RNA and protein graph inputs, DGAT architecture and training objective, the retained RNA-only inference pathway, and preparation of the fixed gene ordering required for Session 3; the workshop explains training but does not retrain the complete model
 3. [Session 3 — Lymph-node inference and interpretation](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb):
    organizer-generated precomputed protein predictions, germinal center–associated protein maps and clusters, and spatial autocorrelation analyses. Because the human lymph node dataset lacks measured protein data, these analyses provide indirect biological evaluation rather than direct protein-level validation.
 
