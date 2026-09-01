@@ -9,3 +9,4 @@ gdown==6.1.0
 leidenalg==0.10.2
 igraph==0.11.8
 networkx==3.4.2
+scikit-learn==1.7.2

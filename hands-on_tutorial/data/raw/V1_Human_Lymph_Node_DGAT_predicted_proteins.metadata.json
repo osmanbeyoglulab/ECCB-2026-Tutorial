@@ -5,12 +5,12 @@
   "source": "10x Genomics V1_Human_Lymph_Node transcript-only Visium",
   "method": "official_dgat_protein_predict",
   "inference_preprocessing": "fill_genes → preprocess_ST → protein_predict",
-  "preprocessing_order_note": "This is the order used to generate the distributed 4,009-row artifact and the order shown in the released general ST workflow (Demo3_Predict_ST.ipynb). The released lymph-node Demo2_Predict.ipynb shows preprocess_ST before fill_genes and would retain 4,014 spots for this raw matrix.",
+  "preprocessing_order_note": "This is the recorded order used to generate the distributed 4,009-row prediction artifact and must be preserved for a directly comparable optional rerun.",
   "dgat_repository": "https://github.com/osmanbeyoglulab/DGAT.git",
   "dgat_commit": "b0128f342de70fa04546d27f9967eab1821f0933",
   "tutorial_repository": "https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial.git",
   "model_layout": "11535_gene_31_protein",
-  "model_note": "Downloadable 11,535-gene pretrained model; published Demo2 lymph-node notebook references a separate 17,434-gene demo model.",
+  "model_note": "Downloadable pretrained model with a fixed ordered input vocabulary of 11,535 genes and 31 protein outputs.",
   "rows": 4009,
   "proteins": 31,
   "protein_names": [
@@ -105,13 +105,7 @@
     "recall": 0.871313672922252,
     "f1": 0.8301404853128991
   },
-  "published_gc_reference": {
-    "accuracy": 0.967,
-    "precision": 0.793,
-    "recall": 0.866,
-    "f1": 0.828
-  },
-  "evaluation_scope": "Indirect anatomical and spatial validation only; no measured lymph-node protein ground truth is available.",
+  "evaluation_scope": "Indirect anatomical and spatial evidence only; no measured lymph-node protein ground truth is available.",
   "limitations": [
     "Inferred proteins are predictions, not measurements.",
     "GC overlap does not establish direct protein-level accuracy.",
