@@ -490,7 +490,8 @@ def _build_knn_adjacency(
     from sklearn.decomposition import PCA
     from sklearn.neighbors import NearestNeighbors
 
-    matrix = np.asarray(features, dtype=float)
+    # PCA(copy=False) centers its input in place, so this must be an owned copy.
+    matrix = np.array(features, dtype=np.float32, order="C", copy=True)
     if matrix.ndim != 2:
         raise ValueError("features must be a 2D array.")
     n_obs = matrix.shape[0]
@@ -500,11 +501,15 @@ def _build_knn_adjacency(
         raise ValueError("k must be positive.")
 
     if apply_pca and matrix.shape[1] > DGAT_RNA_PCA_FEATURE_THRESHOLD:
-        pca = PCA(n_components=variance, svd_solver="full")
+        pca = PCA(n_components=variance, svd_solver="full", copy=False)
         matrix = pca.fit_transform(matrix)
 
     neighbor_count = min(k, n_obs)
-    nbrs = NearestNeighbors(n_neighbors=neighbor_count, algorithm="ball_tree").fit(matrix)
+    nbrs = NearestNeighbors(
+        n_neighbors=neighbor_count,
+        algorithm="brute",
+        n_jobs=-1,
+    ).fit(matrix)
     _, indices = nbrs.kneighbors(matrix)
 
     adjacency = np.zeros((n_obs, n_obs), dtype=np.float32)
@@ -512,6 +517,65 @@ def _build_knn_adjacency(
         adjacency[row, neighbors] = 1.0
     adjacency += np.eye(n_obs, dtype=np.float32)
     return adjacency
+
+
+def _build_knn_edge_index(
+    features: np.ndarray,
+    k: int,
+    *,
+    apply_pca: bool = False,
+    variance: float = DGAT_RNA_PCA_VARIANCE,
+) -> np.ndarray:
+    """Build the official kNN edge set without materializing a dense adjacency."""
+
+    from sklearn.decomposition import PCA
+    from sklearn.neighbors import NearestNeighbors
+
+    # PCA(copy=False) centers its input in place, so this must be an owned copy.
+    matrix = np.array(features, dtype=np.float32, order="C", copy=True)
+    if matrix.ndim != 2:
+        raise ValueError("features must be a 2D array.")
+    n_obs = matrix.shape[0]
+    if n_obs == 0:
+        raise ValueError("At least one observation is required to construct a graph.")
+    if k <= 0:
+        raise ValueError("k must be positive.")
+
+    if apply_pca and matrix.shape[1] > DGAT_RNA_PCA_FEATURE_THRESHOLD:
+        # Keep the released DGAT variance target and full-SVD rule. float32 halves
+        # the working-set size without changing the graph construction contract.
+        pca = PCA(n_components=variance, svd_solver="full", copy=False)
+        matrix = pca.fit_transform(matrix)
+
+    neighbor_count = min(k, n_obs)
+    neighbors = NearestNeighbors(
+        n_neighbors=neighbor_count,
+        algorithm="brute",
+        n_jobs=-1,
+    ).fit(matrix)
+    _, indices = neighbors.kneighbors(matrix)
+
+    sources = np.repeat(np.arange(n_obs, dtype=np.int64), neighbor_count)
+    targets = indices.reshape(-1).astype(np.int64, copy=False)
+    self_nodes = np.arange(n_obs, dtype=np.int64)
+    pairs = np.column_stack(
+        [
+            np.concatenate([sources, self_nodes]),
+            np.concatenate([targets, self_nodes]),
+        ]
+    )
+    # np.nonzero on the former dense adjacency returned row-major edges. Sorting
+    # the unique pairs preserves that deterministic ordering.
+    return np.unique(pairs, axis=0).T
+
+
+def _union_edge_indices(*edge_indices: np.ndarray) -> np.ndarray:
+    """Return the deterministic union of PyG-style edge-index arrays."""
+
+    if not edge_indices:
+        raise ValueError("At least one edge index is required.")
+    pairs = np.concatenate([edge_index.T for edge_index in edge_indices], axis=0)
+    return np.unique(pairs, axis=0).T.astype(np.int64, copy=False)
 
 
 def _adjacency_to_edge_index(adjacency: np.ndarray) -> np.ndarray:
@@ -558,28 +622,32 @@ def build_dgat_graphs(
     if len(spots) < 1:
         raise ValueError("At least one observation is required to construct graphs.")
 
-    spatial = spots[["x", "y"]].to_numpy(dtype=float)
-    rna_matrix = rna_features.to_numpy(dtype=float)
-    protein_matrix = protein_features.to_numpy(dtype=float)
+    spatial = spots[["x", "y"]].to_numpy(dtype=np.float32)
+    rna_matrix = rna_features.to_numpy(dtype=np.float32)
+    protein_matrix = protein_features.to_numpy(dtype=np.float32)
 
-    spatial_adjacency = _build_knn_adjacency(spatial, spatial_k, apply_pca=False)
-    rna_molecular_adjacency = _build_knn_adjacency(
+    spatial_edge_index = _build_knn_edge_index(spatial, spatial_k, apply_pca=False)
+    rna_molecular_edge_index = _build_knn_edge_index(
         rna_matrix,
         molecular_k,
         apply_pca=True,
         variance=rna_pca_variance,
     )
-    protein_molecular_adjacency = _build_knn_adjacency(protein_matrix, molecular_k, apply_pca=False)
-
-    rna_adjacency = _union_adjacency(spatial_adjacency, rna_molecular_adjacency)
-    protein_adjacency = _union_adjacency(spatial_adjacency, protein_molecular_adjacency)
+    protein_molecular_edge_index = _build_knn_edge_index(
+        protein_matrix,
+        molecular_k,
+        apply_pca=False,
+    )
 
     return {
-        "spatial_edge_index": _adjacency_to_edge_index(spatial_adjacency),
-        "rna_molecular_edge_index": _adjacency_to_edge_index(rna_molecular_adjacency),
-        "protein_molecular_edge_index": _adjacency_to_edge_index(protein_molecular_adjacency),
-        "rna_edge_index": _adjacency_to_edge_index(rna_adjacency),
-        "protein_edge_index": _adjacency_to_edge_index(protein_adjacency),
+        "spatial_edge_index": spatial_edge_index,
+        "rna_molecular_edge_index": rna_molecular_edge_index,
+        "protein_molecular_edge_index": protein_molecular_edge_index,
+        "rna_edge_index": _union_edge_indices(spatial_edge_index, rna_molecular_edge_index),
+        "protein_edge_index": _union_edge_indices(
+            spatial_edge_index,
+            protein_molecular_edge_index,
+        ),
     }
 
 

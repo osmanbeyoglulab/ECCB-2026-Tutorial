@@ -64,8 +64,9 @@ The direct Notebook 0 link above is the quickest option. If you are starting fro
 Please do not download these dataset files manually. Notebook 0 places them in the correct Drive
 folders and verifies them automatically.
 
-**Resource estimate:** Notebook 0 takes approximately 5–10 minutes. Allow 5–15 minutes each for
-Sessions 1–2 and 3–5 minutes for the default Session 3 workflow on CPU (about 12 GB system RAM; no
+**Resource estimate:** Notebook 0 takes approximately 5–10 minutes. Allow approximately 7–11
+minutes for Session 1, which creates a compact handoff for Session 2; Session 2 takes approximately
+1–3 minutes. Allow 3–5 minutes for the default Session 3 workflow on CPU (about 12 GB system RAM; no
 GPU). Allow 3 GB of Drive space. Optional full inference takes approximately 15–30 minutes including
 setup and should use at least 12 GB system RAM and 8 GB GPU RAM. Colab allocations vary, so these
 are planning estimates rather than guarantees.
@@ -78,7 +79,7 @@ Files pane; that pane may show a source preview instead of an executable noteboo
 1. [Session 1 — Data and spatial context](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/01_data_and_spatial.ipynb):
    quality control and normalization of paired tonsil RNA and 31-protein ADT measurements, followed by exploration of spatial neighborhoods and multimodal structure
 2. [Session 2 — Understand DGAT Paired Training and RNA-Only Inference](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/02_model_and_predictions.ipynb):
-   paired RNA and protein graph inputs, DGAT architecture and training objective, the retained RNA-only inference pathway, and preparation of the fixed gene ordering required for Session 3; the workshop explains training but does not retrain the complete model
+   paired RNA and protein graph inputs, DGAT architecture and training objective, and the retained RNA-only inference pathway; the workshop explains training but does not retrain the complete model
 3. [Session 3 — Lymph-node inference and interpretation](https://colab.research.google.com/github/osmanbeyoglulab/ECCB-2026-Tutorial/blob/main/hands-on_tutorial/notebooks/03_evaluation_and_interpretation.ipynb):
    organizer-generated precomputed protein predictions, germinal center–associated protein maps and clusters, and spatial autocorrelation analyses. Because the human lymph node dataset lacks measured protein data, these analyses provide indirect biological evaluation rather than direct protein-level validation.
 
