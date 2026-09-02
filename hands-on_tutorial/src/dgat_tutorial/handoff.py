@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 
-SESSION1_HANDOFF_FILENAME = "session01_handoff.npz"
+SESSION1_HANDOFF_FILENAME = "session01_features.npz"
 
 
 @dataclass(frozen=True)
@@ -28,20 +28,10 @@ class Session1Handoff:
     protein_names: np.ndarray
     rna: np.ndarray
     protein: np.ndarray
-    spatial_edge_index: np.ndarray
-    rna_edge_index: np.ndarray
-    protein_edge_index: np.ndarray
-
-
-def _validate_edge_index(name: str, edge_index: np.ndarray, n_spots: int) -> None:
-    if edge_index.ndim != 2 or edge_index.shape[0] != 2:
-        raise ValueError(f"{name} must have shape (2, E); got {edge_index.shape}.")
-    if edge_index.size and (edge_index.min() < 0 or edge_index.max() >= n_spots):
-        raise ValueError(f"{name} contains a node outside 0..{n_spots - 1}.")
 
 
 def validate_session1_handoff(handoff: Session1Handoff) -> None:
-    """Validate dimensions, identifiers, values, and graph bounds."""
+    """Validate feature dimensions, identifiers, coordinates, and values."""
 
     n_spots = len(handoff.spot_ids)
     if n_spots == 0:
@@ -63,12 +53,6 @@ def validate_session1_handoff(handoff: Session1Handoff) -> None:
     ):
         if not np.isfinite(values).all():
             raise ValueError(f"{name} contains NaN or infinite values.")
-    for name, edge_index in (
-        ("spatial_edge_index", handoff.spatial_edge_index),
-        ("rna_edge_index", handoff.rna_edge_index),
-        ("protein_edge_index", handoff.protein_edge_index),
-    ):
-        _validate_edge_index(name, edge_index, n_spots)
 
 
 def write_session1_handoff(
@@ -78,7 +62,6 @@ def write_session1_handoff(
     spots: pd.DataFrame,
     rna: pd.DataFrame,
     protein: pd.DataFrame,
-    graphs: dict[str, np.ndarray],
 ) -> Path:
     """Write one local NPZ bundle, then copy it once to persistent storage."""
 
@@ -94,9 +77,6 @@ def write_session1_handoff(
         protein_names=protein.columns.astype(str).to_numpy(dtype=str),
         rna=rna.to_numpy(dtype=np.float32),
         protein=protein.to_numpy(dtype=np.float32),
-        spatial_edge_index=np.asarray(graphs["spatial_edge_index"], dtype=np.int64),
-        rna_edge_index=np.asarray(graphs["rna_edge_index"], dtype=np.int64),
-        protein_edge_index=np.asarray(graphs["protein_edge_index"], dtype=np.int64),
     )
     validate_session1_handoff(handoff)
 
@@ -115,9 +95,6 @@ def write_session1_handoff(
             protein_names=handoff.protein_names,
             rna=handoff.rna,
             protein=handoff.protein,
-            spatial_edge_index=handoff.spatial_edge_index,
-            rna_edge_index=handoff.rna_edge_index,
-            protein_edge_index=handoff.protein_edge_index,
         )
     os.replace(temporary_local, local_path)
 
@@ -136,7 +113,7 @@ def copy_handoff_to_local(persistent_path: str | Path, local_path: str | Path) -
     local_path = Path(local_path)
     if not persistent_path.is_file() or persistent_path.stat().st_size == 0:
         raise FileNotFoundError(
-            f"Missing {persistent_path}. Complete Session 1 graph construction first."
+            f"Missing {persistent_path}. Complete Session 1 first."
         )
     local_path.parent.mkdir(parents=True, exist_ok=True)
     if local_path.is_file():
@@ -164,9 +141,6 @@ def load_session1_handoff(path: str | Path) -> Session1Handoff:
         "protein_names",
         "rna",
         "protein",
-        "spatial_edge_index",
-        "rna_edge_index",
-        "protein_edge_index",
     }
     with np.load(path, allow_pickle=False) as bundle:
         missing = sorted(required.difference(bundle.files))

@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ASSET_DIR="${DGAT_ASSET_DIR:-${ROOT_DIR}/external/DGAT_assets}"
 DATA_DIR="${ASSET_DIR}/data"
 MODEL_DIR="${ASSET_DIR}/DGAT_pretrained_models/11535_gene_31_protein"
+PRECOMPUTED_GRAPH_SOURCE="${ROOT_DIR}/assets/precomputed_graphs"
+PRECOMPUTED_GRAPH_DIR="${DATA_DIR}/precomputed_graphs"
 
 TONSIL_ADT_ID="1uBKoU_tH3kPjjJaf--D-u4B5ljVpOlwR"
 TONSIL_RNA_ID="1tDYHTVdKfBYXIu6eznvsU16Qd4CnfWuW"
@@ -90,9 +92,28 @@ copy_tracked() {
   fi
 }
 
+copy_precomputed_graphs() {
+  mkdir -p "${PRECOMPUTED_GRAPH_DIR}"
+  local required=(
+    aligned_spot_ids.npy
+    spatial_edge_index.npy
+    rna_edge_index.npy
+    protein_edge_index.npy
+    metadata.json
+  )
+  for filename in "${required[@]}"; do
+    [ -s "${PRECOMPUTED_GRAPH_SOURCE}/${filename}" ] || {
+      echo "ERROR: tracked precomputed graph asset is missing: ${filename}"
+      exit 1
+    }
+    cp "${PRECOMPUTED_GRAPH_SOURCE}/${filename}" "${PRECOMPUTED_GRAPH_DIR}/${filename}"
+  done
+}
+
 download_tonsil() {
   download_drive "Tonsil RNA" "${TONSIL_RNA_ID}" "${DATA_DIR}/Tonsil_RNA.h5ad"
   download_drive "Tonsil ADT" "${TONSIL_ADT_ID}" "${DATA_DIR}/Tonsil_ADT.h5ad"
+  copy_precomputed_graphs
 }
 
 download_lymph_node() {
@@ -113,6 +134,20 @@ check_tonsil() {
   for path in "${DATA_DIR}/Tonsil_RNA.h5ad" "${DATA_DIR}/Tonsil_ADT.h5ad"; do
     [ -s "${path}" ] || { echo "ERROR: missing ${path}"; exit 1; }
   done
+  local graph_required=(
+    "${PRECOMPUTED_GRAPH_DIR}/aligned_spot_ids.npy"
+    "${PRECOMPUTED_GRAPH_DIR}/spatial_edge_index.npy"
+    "${PRECOMPUTED_GRAPH_DIR}/rna_edge_index.npy"
+    "${PRECOMPUTED_GRAPH_DIR}/protein_edge_index.npy"
+    "${PRECOMPUTED_GRAPH_DIR}/metadata.json"
+  )
+  for path in "${graph_required[@]}"; do
+    [ -s "${path}" ] || { echo "ERROR: missing ${path}"; exit 1; }
+  done
+  echo "f4fc176ec073b10159763d8c73a5b036118f8a27e363bf912a26fb85fd1d5492  ${PRECOMPUTED_GRAPH_DIR}/aligned_spot_ids.npy" | shasum -a 256 -c -
+  echo "1534c69183c0a845977e53545092813ca95746fa49f2af722cb96698c6e86033  ${PRECOMPUTED_GRAPH_DIR}/spatial_edge_index.npy" | shasum -a 256 -c -
+  echo "4797ddeb04c08bdbf30fbd4f790ccefc6c50782a3a298bc77f804e958e047519  ${PRECOMPUTED_GRAPH_DIR}/rna_edge_index.npy" | shasum -a 256 -c -
+  echo "4db04e202c56ceda118ef38aeab908921442e8e28961e65cafd741c08666aa94  ${PRECOMPUTED_GRAPH_DIR}/protein_edge_index.npy" | shasum -a 256 -c -
   shasum -a 256 "${DATA_DIR}/Tonsil_RNA.h5ad" "${DATA_DIR}/Tonsil_ADT.h5ad"
 }
 

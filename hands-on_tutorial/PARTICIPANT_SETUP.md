@@ -58,14 +58,15 @@ The direct Notebook 0 link above is the quickest option. If you are starting fro
 - A combined asset manifest containing dataset roles, file sizes, and SHA-256 checksums
 - A Python wheel cache matched to the selected Colab/Python version, reducing later package setup
   time
+- A checksum-verified precomputed Tonsil graph bundle for Sessions 1–2
 - Persistent folders for processed data, results, figures, and completion checkpoints under
   `MyDrive/ECCB2026/state`
 
 Please do not download these dataset files manually. Notebook 0 places them in the correct Drive
 folders and verifies them automatically.
 
-**Resource estimate:** Notebook 0 takes approximately 5–10 minutes. Allow approximately 7–11
-minutes for Session 1, which creates a compact handoff for Session 2; Session 2 takes approximately
+**Resource estimate:** Notebook 0 takes approximately 5–10 minutes. Allow approximately 4–7
+minutes for Session 1, which validates the precomputed graphs and creates a compact feature handoff for Session 2; Session 2 takes approximately
 1–3 minutes. Allow 3–5 minutes for the default Session 3 workflow on CPU (about 12 GB system RAM; no
 GPU). Allow 3 GB of Drive space. Optional full inference takes approximately 15–30 minutes including
 setup and should use at least 12 GB system RAM and 8 GB GPU RAM. Colab allocations vary, so these

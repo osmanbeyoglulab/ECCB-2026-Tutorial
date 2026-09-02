@@ -1,0 +1,30 @@
+{
+  "dataset": "10x Genomics Visium CytAssist Human Tonsil",
+  "purpose": "Precomputed DGAT graph topology for ECCB 2026 tutorial Sessions 1 and 2",
+  "spot_order_file": "aligned_spot_ids.npy",
+  "spots": 4191,
+  "graphs": {
+    "spatial_edge_index.npy": {
+      "shape": [2, 25146],
+      "dtype": "int64",
+      "sha256": "1534c69183c0a845977e53545092813ca95746fa49f2af722cb96698c6e86033"
+    },
+    "rna_edge_index.npy": {
+      "shape": [2, 62477],
+      "dtype": "int64",
+      "sha256": "4797ddeb04c08bdbf30fbd4f790ccefc6c50782a3a298bc77f804e958e047519"
+    },
+    "protein_edge_index.npy": {
+      "shape": [2, 56469],
+      "dtype": "int64",
+      "sha256": "4db04e202c56ceda118ef38aeab908921442e8e28961e65cafd741c08666aa94"
+    }
+  },
+  "spot_order_sha256": "f4fc176ec073b10159763d8c73a5b036118f8a27e363bf912a26fb85fd1d5492",
+  "construction": {
+    "spatial_neighbors": 6,
+    "molecular_neighbors": 10,
+    "rna_pca_variance": 0.85,
+    "encoder_graphs": "spatial union modality-specific molecular neighbors"
+  }
+}
