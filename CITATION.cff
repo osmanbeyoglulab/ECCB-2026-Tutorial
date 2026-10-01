@@ -1,15 +1,45 @@
 cff-version: 1.2.0
-message: "If you use this tutorial, please cite it using the metadata below."
-title: "ECCB 2026 Tutorial: DGAT — Inferring Spatial Protein Landscapes from Transcriptomics"
+message: "If you use these tutorial materials, please cite them using the metadata below."
+
+title: "ECCB 2026 T9: Computational inference of spatial protein landscapes: methods, assumptions and pitfalls"
 type: software
+version: 1.0.0
+date-released: 2026-09-03
+
 authors:
   - family-names: "Osmanbeyoglu"
     given-names: "Hatice Ulku"
-  - family-names: "Wang"
-    given-names: "Haoyu"
-  - family-names: "Cody"
-    given-names: "Brittany"
+    affiliation: "University of Pittsburgh"
+
+  - family-names: "Meng"
+    given-names: "Zeyuan"
+    affiliation: "University of Pittsburgh"
+
+abstract: >-
+  Materials for tutorial T9 at the European Conference on Computational
+  Biology 2026. The tutorial introduces computational approaches for
+  inferring protein abundance from single-cell and spatial transcriptomic
+  data. It covers spatial and multimodal technologies, spatial and
+  non-spatial inference methods, evaluation strategies, underlying
+  assumptions, and common sources of error. The materials combine
+  conceptual instruction with Python and Jupyter notebook exercises.
+
+keywords:
+  - spatial transcriptomics
+  - spatial proteomics
+  - spatial omics
+  - protein inference
+  - multimodal omics
+  - graph neural networks
+  - DGAT
+  - computational biology
+  - bioinformatics
+  - tutorial
+
 license: MIT
+repository-code: "https://github.com/osmanbeyoglulab/ECCB-2026-Tutorial"
+url: "https://eccb2026.org/tutorials-workshops#t9-computational-inference-spatial-protein-landscapes-methods-assumptions-and-pitfalls"
+
 preferred-citation:
   type: article
   authors:
